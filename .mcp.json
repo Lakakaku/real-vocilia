@@ -1,0 +1,53 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "your_context7_api_key_here"],
+      "description": "Context7 MCP for vector search and RAG capabilities"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "description": "Playwright MCP for browser automation and web testing"
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com",
+      "description": "Vercel MCP for deployment and hosting operations"
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase",
+        "--read-only",
+        "--project-ref=your_supabase_project_ref"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "your_supabase_access_token"
+      },
+      "description": "Supabase MCP for database operations"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@github/github-mcp-server"],
+      "env": {
+        "GITHUB_TOKEN": "your_github_token"
+      },
+      "description": "GitHub MCP for repository operations and code management"
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server"
+      ],
+      "description": "Serena MCP for semantic code analysis and editing"
+    },
+    "firecrawl": {
+      "url": "https://mcp.firecrawl.dev/your_firecrawl_api_key/v2/sse",
+      "description": "Firecrawl MCP for web scraping and content extraction"
+    }
+  }
+}
