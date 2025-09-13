@@ -1,0 +1,86 @@
+{
+  "name": "real-vocilia",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["arn1"],
+  "env": {
+    "NEXT_PUBLIC_CUSTOMER_URL": "https://vocilia.com",
+    "NEXT_PUBLIC_BUSINESS_URL": "https://business.vocilia.com",
+    "NEXT_PUBLIC_ADMIN_URL": "https://admin.vocilia.com",
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
+      "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+      "OPENAI_API_KEY": "@openai_api_key"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(self), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/api/robots"
+    }
+  ],
+  "functions": {
+    "app/api/customer/feedback/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/business/context/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/admin/batch/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/weekly-batch",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/verification-reminder",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
