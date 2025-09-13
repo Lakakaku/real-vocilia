@@ -2,7 +2,7 @@
 
 # Pre-tool-use hook for vocilia project
 # Validates MCP server health before running tools that depend on them
-
+awd
 TOOL_NAME="$1"
 
 # Only run validation for MCP-dependent tools

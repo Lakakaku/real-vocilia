@@ -48,6 +48,16 @@
     "firecrawl": {
       "url": "https://mcp.firecrawl.dev/your_firecrawl_api_key/v2/sse",
       "description": "Firecrawl MCP for web scraping and content extraction"
+    },
+    "resend": {
+      "command": "npx",
+      "args": ["-y", "@resend/mcp-server"],
+      "env": {
+        "RESEND_API_KEY": "re_RC78Nz9Z_FnAVBnstfxwxx21mYTD2yeD3",
+        "SENDER_EMAIL_ADDRESS": "noreply@vocilia.com"
+      },
+      "description": "Resend MCP for email sending and management"
     }
+
   }
 }
