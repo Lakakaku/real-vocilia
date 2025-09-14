@@ -1,5 +1,4 @@
 {
-  "name": "real-vocilia",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
@@ -11,14 +10,6 @@
     "NEXT_PUBLIC_BUSINESS_URL": "https://business.vocilia.com",
     "NEXT_PUBLIC_ADMIN_URL": "https://admin.vocilia.com",
     "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
-      "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-      "OPENAI_API_KEY": "@openai_api_key"
-    }
   },
   "headers": [
     {
@@ -98,45 +89,74 @@
       ]
     },
     {
-      "source": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|webp|avif))",
+      "source": "/(.*).ico",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=2592000, stale-while-revalidate=86400"
-        },
-        {
-          "key": "X-CDN-Cache-Control",
-          "value": "max-age=2592000"
-        },
-        {
-          "key": "Accept-CH",
-          "value": "DPR, Width, Viewport-Width"
         }
       ]
     },
     {
-      "source": "/(.*\\.(woff|woff2|ttf|otf|eot))",
+      "source": "/(.*).png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).jpg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).jpeg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).gif",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).svg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).webp",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).woff2",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, immutable, max-age=31536000"
-        },
-        {
-          "key": "X-CDN-Cache-Control",
-          "value": "max-age=31536000"
-        }
-      ]
-    },
-    {
-      "source": "/(.*\\.(css|js))",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=86400, stale-while-revalidate=604800"
-        },
-        {
-          "key": "X-CDN-Cache-Control",
-          "value": "max-age=86400"
         }
       ]
     },
@@ -230,15 +250,5 @@
   },
   "public": false,
   "cleanUrls": true,
-  "trailingSlash": false,
-  "outputFileTracingIncludes": {
-    "/*": ["node_modules/@sentry/**/*"]
-  },
-  "analytics": {
-    "enable": true,
-    "beforeSend": "(event) => { return event; }"
-  },
-  "speedInsights": {
-    "enable": true
-  }
+  "trailingSlash": false
 }
