@@ -62,12 +62,14 @@ export async function middleware(request: NextRequest) {
   // Handle root path redirects based on domain
   if (pathname === '/') {
     if (isBusinessDomain) {
-      // Redirect business domain root to login
-      return NextResponse.redirect(new URL('/business/login', request.url))
+      // Redirect business domain root to login (use /login in production, /business/login in dev)
+      const loginPath = isDevelopment ? '/business/login' : '/login'
+      return NextResponse.redirect(new URL(loginPath, request.url))
     }
     if (isAdminDomain) {
-      // Redirect admin domain root to login
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      // Redirect admin domain root to login (use /login in production, /admin/login in dev)
+      const loginPath = isDevelopment ? '/admin/login' : '/login'
+      return NextResponse.redirect(new URL(loginPath, request.url))
     }
     // Customer domain shows the main page
   }
@@ -162,7 +164,9 @@ export async function middleware(request: NextRequest) {
   // Route protection for business platform
   if (isBusinessDomain) {
     const protectedPaths = ['/dashboard', '/context', '/feedback', '/verification', '/stores', '/settings', '/onboarding']
-    const isProtectedPath = protectedPaths.some(path => pathname.startsWith('/business' + path) || pathname.startsWith(path))
+    const isProtectedPath = isDevelopment
+      ? protectedPaths.some(path => pathname.startsWith('/business' + path))
+      : protectedPaths.some(path => pathname.startsWith(path))
     const isAuthPath = pathname.includes('/login') || pathname.includes('/signup') || pathname.includes('/reset-password')
 
     if (isProtectedPath && !user) {
@@ -184,7 +188,9 @@ export async function middleware(request: NextRequest) {
   if (isAdminDomain) {
     const isAuthPath = pathname.includes('/login')
     const adminPaths = ['/dashboard', '/businesses', '/payments', '/feedback', '/settings']
-    const isAdminPath = adminPaths.some(path => pathname.startsWith('/admin' + path) || pathname.startsWith(path))
+    const isAdminPath = isDevelopment
+      ? adminPaths.some(path => pathname.startsWith('/admin' + path))
+      : adminPaths.some(path => pathname.startsWith(path))
 
     if (!isAuthPath && !user) {
       const loginUrl = isDevelopment
