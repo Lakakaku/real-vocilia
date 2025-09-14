@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Multi-domain routing configuration
@@ -171,4 +173,40 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// Sentry configuration options
+const sentryWebpackPluginOptions = {
+  // Organization and project
+  org: 'vocilia',
+  project: 'vocilia-platform',
+
+  // Only upload source maps in production
+  silent: true,
+
+  // Auth token for uploading source maps
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Hide source maps from public access
+  hideSourceMaps: true,
+
+  // Disable source map uploading in development
+  disableServerWebpackPlugin: process.env.NODE_ENV !== 'production',
+  disableClientWebpackPlugin: process.env.NODE_ENV !== 'production',
+
+  // Automatically instrument the app
+  autoInstrumentServerFunctions: true,
+
+  // Tree shake Sentry code in production
+  widenClientFileUpload: true,
+
+  // Tunnel to avoid ad blockers
+  tunnelRoute: '/monitoring',
+
+  // Associate commits
+  release: process.env.VERCEL_GIT_COMMIT_SHA,
+};
+
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions, {
+  // Additional options
+  hideSourceMaps: true,
+  transpileClientSDK: true,
+});

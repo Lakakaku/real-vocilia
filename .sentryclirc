@@ -1,0 +1,15 @@
+[defaults]
+url=https://sentry.io/
+org=vocilia
+project=vocilia-platform
+
+[auth]
+token=${SENTRY_AUTH_TOKEN}
+
+[http]
+keepalive=false
+upload_chunk_size=1048576
+max_retries=5
+
+[log]
+level=info
