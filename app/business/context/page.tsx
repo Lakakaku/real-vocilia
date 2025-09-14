@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ContextCategories } from './components/ContextCategories'
 import { ContextCompleteness } from './components/ContextCompleteness'
 import { ContextChat } from './components/ContextChat'
+import { CustomQuestionsManager } from './components/CustomQuestionsManager'
 import { updateContextCategory } from '@/app/actions/context-actions'
 import type { ContextCategory } from './components/ContextCategories'
 
@@ -13,6 +14,7 @@ export default function ContextPage() {
   const [loading, setLoading] = useState(true)
   const [context, setContext] = useState<any>(null)
   const [completenessScore, setCompletenessScore] = useState(0)
+  const [stores, setStores] = useState<Array<{ id: string; name: string; location?: string }>>([])
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -39,6 +41,17 @@ export default function ContextPage() {
       if (contextData) {
         setContext(contextData)
         setCompletenessScore(contextData.completeness_score || 0)
+      }
+
+      // Load stores for this business
+      const { data: storesData } = await supabase
+        .from('stores')
+        .select('id, name, location')
+        .eq('business_id', user.id)
+        .order('created_at', { ascending: true })
+
+      if (storesData && storesData.length > 0) {
+        setStores(storesData)
       }
 
       setLoading(false)
@@ -126,6 +139,17 @@ export default function ContextPage() {
                 <p className="text-sm text-gray-600">Let AI learn from feedback</p>
               </button>
             </div>
+          </div>
+
+          {/* Custom Questions Manager */}
+          <div className="mt-8 bg-white border border-gray-200 rounded-lg p-6">
+            <CustomQuestionsManager
+              businessId={context?.business_id || ''}
+              businessType={context?.context_data?.businessType || 'other'}
+              businessGoals={context?.context_data?.primaryGoals || []}
+              stores={stores}
+              onUpdate={() => checkAuth()}
+            />
           </div>
         </div>
 
