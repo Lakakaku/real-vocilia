@@ -19,7 +19,32 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/reset-password?code=${code}`)
       }
 
-      // Otherwise, it's email verification - redirect to dashboard or next page
+      // Get the user session to check if they need onboarding
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        // Check if this is a first-time user who needs onboarding
+        const { data: business } = await supabase
+          .from('businesses')
+          .select('onboarding_completed, onboarding_step')
+          .eq('id', user.id)
+          .single()
+
+        if (business && !business.onboarding_completed) {
+          // Update onboarding step to 1 if it's still 0
+          if (business.onboarding_step === 0) {
+            await supabase
+              .from('businesses')
+              .update({ onboarding_step: 1 })
+              .eq('id', user.id)
+          }
+
+          // Redirect to onboarding
+          return NextResponse.redirect(`${origin}/onboarding`)
+        }
+      }
+
+      // Otherwise, redirect to dashboard or next page
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

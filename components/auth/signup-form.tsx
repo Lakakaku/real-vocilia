@@ -21,6 +21,7 @@ import {
 import { signupSchema, type SignupInput } from '@/lib/auth/validation'
 import { signup } from '@/lib/auth/actions'
 import { PasswordStrength } from './password-strength'
+import { EmailVerificationNotice } from './email-verification-notice'
 
 export function SignupForm() {
   const router = useRouter()
@@ -28,6 +29,11 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [signupData, setSignupData] = useState<{
+    email: string
+    businessName: string
+    storeCode?: string
+  } | null>(null)
 
   const {
     register,
@@ -51,12 +57,28 @@ export function SignupForm() {
         setError(result.error)
       } else if (result?.success) {
         setSuccess(result.message || 'Account created successfully')
+        setSignupData({
+          email: data.email,
+          businessName: data.name,
+          storeCode: result.data?.storeCode,
+        })
       }
     } catch (err) {
       setError('An unexpected error occurred')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // If signup was successful, show the email verification notice
+  if (signupData) {
+    return (
+      <EmailVerificationNotice
+        email={signupData.email}
+        businessName={signupData.businessName}
+        storeCode={signupData.storeCode}
+      />
+    )
   }
 
   return (
