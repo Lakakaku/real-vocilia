@@ -76,13 +76,34 @@ const nextConfig = {
 
   // Rewrites for multi-domain support
   async rewrites() {
-    const rewrites = [];
-
     // In production, map subdomain paths to their respective app directories
     if (process.env.NODE_ENV === 'production') {
       return {
         beforeFiles: [
-          // Business subdomain routes
+          // Static assets should not be rewritten
+          {
+            source: '/_next/:path*',
+            has: [
+              {
+                type: 'host',
+                value: 'business.vocilia.com',
+              },
+            ],
+            destination: '/_next/:path*',
+          },
+          {
+            source: '/_next/:path*',
+            has: [
+              {
+                type: 'host',
+                value: 'admin.vocilia.com',
+              },
+            ],
+            destination: '/_next/:path*',
+          },
+        ],
+        afterFiles: [
+          // Business subdomain routes (non-static)
           {
             source: '/:path*',
             has: [
@@ -93,7 +114,7 @@ const nextConfig = {
             ],
             destination: '/business/:path*',
           },
-          // Admin subdomain routes
+          // Admin subdomain routes (non-static)
           {
             source: '/:path*',
             has: [

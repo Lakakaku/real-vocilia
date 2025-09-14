@@ -208,26 +208,6 @@
     {
       "source": "/robots.txt",
       "destination": "/api/robots"
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "business.vocilia.com"
-        }
-      ],
-      "destination": "/business/$1"
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "admin.vocilia.com"
-        }
-      ],
-      "destination": "/admin/$1"
     }
   ],
   "functions": {
