@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 
 // Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 export default function HomePage() {
   const [storeCode, setStoreCode] = useState('')
