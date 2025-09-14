@@ -164,9 +164,11 @@ export async function middleware(request: NextRequest) {
   // Route protection for business platform
   if (isBusinessDomain) {
     const protectedPaths = ['/dashboard', '/context', '/feedback', '/verification', '/stores', '/settings', '/onboarding']
-    const isProtectedPath = isDevelopment
-      ? protectedPaths.some(path => pathname.startsWith('/business' + path))
-      : protectedPaths.some(path => pathname.startsWith(path))
+    // In production, the rewrite maps business.vocilia.com/* to /business/*
+    // So the middleware sees /business/* paths even in production
+    const isProtectedPath = protectedPaths.some(path =>
+      pathname.startsWith('/business' + path) || pathname.startsWith(path)
+    )
     const isAuthPath = pathname.includes('/login') || pathname.includes('/signup') || pathname.includes('/reset-password')
 
     if (isProtectedPath && !user) {
@@ -188,9 +190,11 @@ export async function middleware(request: NextRequest) {
   if (isAdminDomain) {
     const isAuthPath = pathname.includes('/login')
     const adminPaths = ['/dashboard', '/businesses', '/payments', '/feedback', '/settings']
-    const isAdminPath = isDevelopment
-      ? adminPaths.some(path => pathname.startsWith('/admin' + path))
-      : adminPaths.some(path => pathname.startsWith(path))
+    // In production, the rewrite maps admin.vocilia.com/* to /admin/*
+    // So the middleware sees /admin/* paths even in production
+    const isAdminPath = adminPaths.some(path =>
+      pathname.startsWith('/admin' + path) || pathname.startsWith(path)
+    )
 
     if (!isAuthPath && !user) {
       const loginUrl = isDevelopment

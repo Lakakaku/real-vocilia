@@ -74,13 +74,41 @@ const nextConfig = {
     ];
   },
 
-  // Rewrites for multi-domain support in development
+  // Rewrites for multi-domain support
   async rewrites() {
-    // Only apply rewrites in development
-    if (process.env.NODE_ENV !== 'development') {
-      return [];
+    const rewrites = [];
+
+    // In production, map subdomain paths to their respective app directories
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        beforeFiles: [
+          // Business subdomain routes
+          {
+            source: '/:path*',
+            has: [
+              {
+                type: 'host',
+                value: 'business.vocilia.com',
+              },
+            ],
+            destination: '/business/:path*',
+          },
+          // Admin subdomain routes
+          {
+            source: '/:path*',
+            has: [
+              {
+                type: 'host',
+                value: 'admin.vocilia.com',
+              },
+            ],
+            destination: '/admin/:path*',
+          },
+        ],
+      };
     }
 
+    // Development rewrites
     return [
       // Business platform routes
       {
