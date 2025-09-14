@@ -254,13 +254,109 @@ export class ContextService {
   }
   
   /**
-   * Enhance context data with AI suggestions (placeholder for AI integration)
-   * This will be implemented by the ai-integration agent
+   * Enhance context data with AI suggestions
+   * Uses GPT-4o-mini to analyze and improve context
    */
   static async enhanceWithAI(contextData: BusinessContextData): Promise<BusinessContextData> {
-    // Placeholder for AI enhancement
-    // The ai-integration agent will implement this method
-    return contextData
+    try {
+      // Import AI services dynamically to avoid circular dependencies
+      const { openAIService } = await import('@/lib/ai/openai-service')
+      const { default: PromptBuilder } = await import('@/lib/ai/prompt-builder')
+
+      // Build improvement prompt
+      const prompt = PromptBuilder.buildImprovementPrompt(
+        contextData,
+        this.calculateInitialCompleteness(contextData),
+        contextData.businessType
+      )
+
+      // Get AI suggestions
+      const response = await openAIService.sendMessage(
+        prompt,
+        [],
+        {
+          businessType: contextData.businessType,
+          language: 'auto',
+          contextData
+        }
+      )
+
+      if (response.error) {
+        console.error('AI enhancement failed:', response.error)
+        return contextData
+      }
+
+      // Parse AI suggestions and apply improvements
+      const enhancedData = { ...contextData }
+
+      // Extract specific improvements from AI response
+      const suggestions = this.parseAISuggestions(response.content)
+
+      // Apply suggestions to context data
+      if (suggestions.fraudIndicators && suggestions.fraudIndicators.length > 0) {
+        enhancedData.fraudIndicators = Array.from(
+          new Set([...contextData.fraudIndicators, ...suggestions.fraudIndicators])
+        )
+      }
+
+      if (suggestions.customQuestions && suggestions.customQuestions.length > 0) {
+        enhancedData.customQuestions = Array.from(
+          new Set([...contextData.customQuestions, ...suggestions.customQuestions])
+        )
+      }
+
+      if (suggestions.commonIssues && suggestions.commonIssues.length > 0) {
+        enhancedData.commonIssues = Array.from(
+          new Set([...contextData.commonIssues, ...suggestions.commonIssues])
+        )
+      }
+
+      return enhancedData
+    } catch (error) {
+      console.error('Error enhancing context with AI:', error)
+      return contextData
+    }
+  }
+
+  /**
+   * Parse AI suggestions from response
+   */
+  private static parseAISuggestions(aiResponse: string): {
+    fraudIndicators?: string[]
+    customQuestions?: string[]
+    commonIssues?: string[]
+  } {
+    const suggestions: any = {}
+
+    // Look for fraud indicators
+    const fraudMatch = aiResponse.match(/fraud[^:]*:([^]*?)(?:\n\n|$)/i)
+    if (fraudMatch) {
+      suggestions.fraudIndicators = fraudMatch[1]
+        .split(/[,\n]/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+    }
+
+    // Look for custom questions
+    const questionsMatch = aiResponse.match(/questions?[^:]*:([^]*?)(?:\n\n|$)/i)
+    if (questionsMatch) {
+      suggestions.customQuestions = questionsMatch[1]
+        .split(/[?\n]/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .map(s => s.endsWith('?') ? s : `${s}?`)
+    }
+
+    // Look for common issues
+    const issuesMatch = aiResponse.match(/issues?[^:]*:([^]*?)(?:\n\n|$)/i)
+    if (issuesMatch) {
+      suggestions.commonIssues = issuesMatch[1]
+        .split(/[,\n]/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+    }
+
+    return suggestions
   }
   
   /**

@@ -47,15 +47,53 @@ export default function ContextPage() {
   }
 
   const sendMessage = async () => {
-    if (!message.trim()) return
+    if (!message.trim() || isProcessing) return
 
     setIsProcessing(true)
-    // TODO: Integrate with GPT-4o-mini for context assistance
-
-    // Simulated AI response
-    setAiResponse('I understand you want to improve your business context. Let me help you with that...')
+    const userMessage = message
     setMessage('')
-    setIsProcessing(false)
+
+    try {
+      // Call AI assistant API
+      const response = await fetch('/api/context/ai-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          conversation_id: context?.ai_conversation_id || undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get AI response')
+      }
+
+      // Update AI response
+      setAiResponse(data.response)
+
+      // Store conversation ID for session continuity
+      if (data.conversation_id && context) {
+        context.ai_conversation_id = data.conversation_id
+      }
+
+      // Update completeness score if context was updated
+      if (data.context_updates?.suggested?.length > 0) {
+        // Refetch context to get updated completeness score
+        await checkAuth()
+      }
+
+    } catch (error) {
+      console.error('Error sending message to AI:', error)
+      setAiResponse(
+        'I apologize, but I encountered an error. Please try again or continue building your context manually.'
+      )
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   if (loading) {
