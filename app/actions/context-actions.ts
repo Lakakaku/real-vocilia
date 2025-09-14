@@ -308,67 +308,631 @@ export async function validateContextEligibility(
     if (!businessId) {
       return { success: false, error: 'Business ID is required' }
     }
-    
+
     const supabase = await createClient()
-    
+
     // Check business exists and has completed onboarding
     const { data: business, error: businessError } = await supabase
       .from('businesses')
       .select('id, onboarding_completed, business_type')
       .eq('id', businessId)
       .single()
-    
+
     if (businessError) {
       console.error('Error checking business eligibility:', businessError)
       return { success: false, error: 'Failed to verify business status' }
     }
-    
+
     if (!business) {
-      return { 
-        success: true, 
-        eligible: false, 
-        reason: 'Business not found' 
+      return {
+        success: true,
+        eligible: false,
+        reason: 'Business not found'
       }
     }
-    
+
     if (!business.onboarding_completed) {
-      return { 
-        success: true, 
-        eligible: false, 
-        reason: 'Onboarding must be completed first' 
+      return {
+        success: true,
+        eligible: false,
+        reason: 'Onboarding must be completed first'
       }
     }
-    
+
     if (!business.business_type) {
-      return { 
-        success: true, 
-        eligible: false, 
-        reason: 'Business type must be specified' 
+      return {
+        success: true,
+        eligible: false,
+        reason: 'Business type must be specified'
       }
     }
-    
+
     // Check if context already exists
     const { success: checkSuccess, hasContext } = await ContextOperations.hasInitializedContext(
       businessId,
       true // use server client
     )
-    
+
     if (!checkSuccess) {
       return { success: false, error: 'Failed to check context status' }
     }
-    
+
     if (hasContext) {
-      return { 
-        success: true, 
-        eligible: false, 
-        reason: 'Context already initialized' 
+      return {
+        success: true,
+        eligible: false,
+        reason: 'Context already initialized'
       }
     }
-    
+
     return { success: true, eligible: true }
-    
+
   } catch (error) {
     console.error('Unexpected error in validateContextEligibility:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Update specific context category data
+ */
+export async function updateContextCategory(
+  businessId: string,
+  categoryId: string,
+  categoryData: Record<string, any>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!businessId || !categoryId || !categoryData) {
+      return { success: false, error: 'All parameters are required' }
+    }
+
+    // Get existing context data
+    const { success, data: existingContext, error } = await ContextOperations.getContextByBusinessId(
+      businessId,
+      true // use server client
+    )
+
+    if (!success) {
+      console.error('Error getting existing context:', error)
+      return { success: false, error: error || 'Failed to load existing context' }
+    }
+
+    if (!existingContext) {
+      return { success: false, error: 'Context not found for business' }
+    }
+
+    // Update the specific category data
+    const updatedContextData = {
+      ...existingContext.context_data,
+      [`${categoryId}_data`]: categoryData
+    }
+
+    // Recalculate completeness score
+    const newCompleteness = calculateCategoryBasedCompleteness(updatedContextData)
+
+    // Update in database
+    const { success: updateSuccess, error: updateError } = await ContextOperations.updateContext(
+      businessId,
+      {
+        context_data: updatedContextData,
+        completeness_score: newCompleteness
+      },
+      true // use server client
+    )
+
+    if (!updateSuccess) {
+      console.error('Error updating context category:', updateError)
+      return { success: false, error: updateError || 'Failed to update context' }
+    }
+
+    // Revalidate relevant paths
+    revalidatePath('/business/context')
+    revalidatePath('/business/dashboard')
+
+    return { success: true }
+
+  } catch (error) {
+    console.error('Unexpected error in updateContextCategory:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Calculate completeness score based on category data
+ */
+function calculateCategoryBasedCompleteness(contextData: any): number {
+  const categories = [
+    'business-details',
+    'products-services',
+    'customer-demographics',
+    'transaction-patterns',
+    'operations',
+    'business-goals'
+  ]
+
+  const categoryWeights = {
+    'business-details': 0.25,      // 25% - Most important
+    'products-services': 0.20,     // 20%
+    'customer-demographics': 0.15,  // 15%
+    'transaction-patterns': 0.15,   // 15%
+    'operations': 0.15,            // 15%
+    'business-goals': 0.10         // 10% - Least critical for fraud detection
+  }
+
+  let totalScore = 0
+
+  categories.forEach(categoryId => {
+    const categoryData = contextData[`${categoryId}_data`]
+    const categoryScore = calculateSingleCategoryCompleteness(categoryData)
+    const weight = categoryWeights[categoryId as keyof typeof categoryWeights] || 0
+    totalScore += categoryScore * weight
+  })
+
+  // Add base score from original context data (for backward compatibility)
+  const baseFields = [
+    'businessType', 'storeCount', 'avgTransactionValue', 'primaryGoals',
+    'businessSpecialty', 'commonCompliment', 'improvementArea', 'uniqueOffering'
+  ]
+
+  const filledBaseFields = baseFields.filter(field =>
+    contextData[field] &&
+    (typeof contextData[field] === 'string' ? contextData[field].trim() : true)
+  ).length
+
+  const baseScore = (filledBaseFields / baseFields.length) * 0.3 // 30% for backward compatibility
+
+  return Math.min(100, Math.round((totalScore + baseScore) * 100))
+}
+
+/**
+ * Calculate completeness for a single category
+ */
+function calculateSingleCategoryCompleteness(categoryData: any): number {
+  if (!categoryData || typeof categoryData !== 'object') return 0
+
+  const fields = Object.keys(categoryData)
+  if (fields.length === 0) return 0
+
+  const filledFields = fields.filter(key => {
+    const value = categoryData[key]
+    if (Array.isArray(value)) return value.length > 0
+    if (typeof value === 'string') return value.trim().length > 0
+    if (typeof value === 'number') return value >= 0
+    return !!value
+  })
+
+  return filledFields.length / fields.length
+}
+
+/**
+ * Get context category data for display
+ */
+export async function getContextCategoryData(
+  businessId: string,
+  categoryId?: string
+): Promise<{
+  success: boolean
+  data?: any
+  error?: string
+}> {
+  try {
+    if (!businessId) {
+      return { success: false, error: 'Business ID is required' }
+    }
+
+    const { success, data: contextData, error } = await ContextOperations.getContextByBusinessId(
+      businessId,
+      true // use server client
+    )
+
+    if (!success) {
+      console.error('Error getting context category data:', error)
+      return { success: false, error: error || 'Failed to load context data' }
+    }
+
+    if (!contextData) {
+      return { success: false, error: 'Context not found' }
+    }
+
+    // If specific category requested, return just that
+    if (categoryId) {
+      const categoryData = (contextData.context_data as any)[`${categoryId}_data`]
+      return { success: true, data: categoryData || {} }
+    }
+
+    // Return all context data
+    return { success: true, data: contextData }
+
+  } catch (error) {
+    console.error('Unexpected error in getContextCategoryData:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Save draft data for auto-save functionality
+ */
+export async function saveDraft(
+  businessId: string,
+  draftData: any,
+  category?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!businessId || !draftData) {
+      return { success: false, error: 'Business ID and draft data are required' }
+    }
+
+    const supabase = await createClient()
+
+    // Update draft data in business_contexts table
+    const { error } = await supabase
+      .from('business_contexts')
+      .update({
+        draft_data: draftData,
+        last_draft_saved_at: new Date().toISOString(),
+        has_unsaved_changes: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('business_id', businessId)
+
+    if (error) {
+      console.error('Error saving draft:', error)
+      return { success: false, error: 'Failed to save draft' }
+    }
+
+    return { success: true }
+
+  } catch (error) {
+    console.error('Unexpected error in saveDraft:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Load draft data
+ */
+export async function loadDraft(businessId: string): Promise<{
+  success: boolean
+  data?: any
+  error?: string
+}> {
+  try {
+    if (!businessId) {
+      return { success: false, error: 'Business ID is required' }
+    }
+
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('business_contexts')
+      .select('draft_data, last_draft_saved_at')
+      .eq('business_id', businessId)
+      .single()
+
+    if (error) {
+      console.error('Error loading draft:', error)
+      return { success: false, error: 'Failed to load draft' }
+    }
+
+    return {
+      success: true,
+      data: {
+        draft_data: data?.draft_data,
+        last_draft_saved_at: data?.last_draft_saved_at
+      }
+    }
+
+  } catch (error) {
+    console.error('Unexpected error in loadDraft:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Clear draft data
+ */
+export async function clearDraft(businessId: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  try {
+    if (!businessId) {
+      return { success: false, error: 'Business ID is required' }
+    }
+
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from('business_contexts')
+      .update({
+        draft_data: {},
+        last_draft_saved_at: null,
+        has_unsaved_changes: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('business_id', businessId)
+
+    if (error) {
+      console.error('Error clearing draft:', error)
+      return { success: false, error: 'Failed to clear draft' }
+    }
+
+    return { success: true }
+
+  } catch (error) {
+    console.error('Unexpected error in clearDraft:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Save conversation history
+ */
+export async function saveConversationHistory(
+  businessId: string,
+  messages: any[]
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!businessId) {
+      return { success: false, error: 'Business ID is required' }
+    }
+
+    const supabase = await createClient()
+
+    // Get current context record
+    const { data: currentContext, error: getError } = await supabase
+      .from('business_contexts')
+      .select('ai_conversation_history')
+      .eq('business_id', businessId)
+      .single()
+
+    if (getError) {
+      console.error('Error getting current context:', getError)
+      return { success: false, error: 'Failed to load current conversation' }
+    }
+
+    // Merge new messages with existing history
+    const existingHistory = currentContext?.ai_conversation_history || []
+    const updatedHistory = [...existingHistory, ...messages]
+
+    // Keep only last 500 messages to prevent database bloat
+    const recentHistory = updatedHistory.slice(-500)
+
+    const { error } = await supabase
+      .from('business_contexts')
+      .update({
+        ai_conversation_history: recentHistory,
+        last_ai_update: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('business_id', businessId)
+
+    if (error) {
+      console.error('Error saving conversation history:', error)
+      return { success: false, error: 'Failed to save conversation history' }
+    }
+
+    return { success: true }
+
+  } catch (error) {
+    console.error('Unexpected error in saveConversationHistory:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Load conversation history
+ */
+export async function loadConversationHistory(
+  businessId: string,
+  limit: number = 50,
+  before?: string
+): Promise<{
+  success: boolean
+  history?: any[]
+  hasMore?: boolean
+  error?: string
+}> {
+  try {
+    if (!businessId) {
+      return { success: false, error: 'Business ID is required' }
+    }
+
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('business_contexts')
+      .select('ai_conversation_history')
+      .eq('business_id', businessId)
+      .single()
+
+    if (error) {
+      console.error('Error loading conversation history:', error)
+      return { success: false, error: 'Failed to load conversation history' }
+    }
+
+    let history = data?.ai_conversation_history || []
+
+    // Filter messages before timestamp if provided
+    if (before) {
+      const beforeDate = new Date(before)
+      history = history.filter((msg: any) => new Date(msg.timestamp) < beforeDate)
+    }
+
+    // Sort by timestamp descending and limit
+    history.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+    const hasMore = history.length > limit
+    const limitedHistory = history.slice(0, limit)
+
+    return {
+      success: true,
+      history: limitedHistory.reverse(), // Return in chronological order
+      hasMore
+    }
+
+  } catch (error) {
+    console.error('Unexpected error in loadConversationHistory:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Clear conversation history
+ */
+export async function clearConversationHistory(businessId: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  try {
+    if (!businessId) {
+      return { success: false, error: 'Business ID is required' }
+    }
+
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from('business_contexts')
+      .update({
+        ai_conversation_history: [],
+        last_ai_update: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('business_id', businessId)
+
+    if (error) {
+      console.error('Error clearing conversation history:', error)
+      return { success: false, error: 'Failed to clear conversation history' }
+    }
+
+    return { success: true }
+
+  } catch (error) {
+    console.error('Unexpected error in clearConversationHistory:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }
+  }
+}
+
+/**
+ * Update context with optimistic updates and conflict detection
+ */
+export async function updateContextWithOptimisticUpdate(
+  businessId: string,
+  updates: any,
+  lastKnownVersion?: string
+): Promise<{
+  success: boolean
+  data?: any
+  conflicts?: any[]
+  error?: string
+}> {
+  try {
+    if (!businessId || !updates) {
+      return { success: false, error: 'Business ID and updates are required' }
+    }
+
+    const supabase = await createClient()
+
+    // Get current context data with version check
+    const { data: currentContext, error: getError } = await supabase
+      .from('business_contexts')
+      .select('*')
+      .eq('business_id', businessId)
+      .single()
+
+    if (getError) {
+      console.error('Error getting current context:', getError)
+      return { success: false, error: 'Failed to load current context' }
+    }
+
+    // Check for conflicts if version is provided
+    if (lastKnownVersion && currentContext?.updated_at) {
+      const currentVersion = new Date(currentContext.updated_at).toISOString()
+      if (currentVersion !== lastKnownVersion) {
+        // Detect specific conflicts
+        const conflicts = Object.keys(updates).filter(key => {
+          return JSON.stringify(currentContext.context_data[key]) !== JSON.stringify(updates[key])
+        })
+
+        if (conflicts.length > 0) {
+          return {
+            success: false,
+            conflicts: conflicts.map(key => ({
+              field: key,
+              currentValue: currentContext.context_data[key],
+              newValue: updates[key]
+            })),
+            error: 'Conflicts detected - data was modified by another user'
+          }
+        }
+      }
+    }
+
+    // Merge updates with current context
+    const updatedContextData = {
+      ...currentContext.context_data,
+      ...updates
+    }
+
+    // Recalculate completeness score
+    const newCompleteness = calculateCategoryBasedCompleteness(updatedContextData)
+
+    const { data: updatedContext, error: updateError } = await supabase
+      .from('business_contexts')
+      .update({
+        context_data: updatedContextData,
+        completeness_score: newCompleteness,
+        has_unsaved_changes: false,
+        last_saved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('business_id', businessId)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Error updating context:', updateError)
+      return { success: false, error: 'Failed to update context' }
+    }
+
+    // Revalidate relevant paths
+    revalidatePath('/business/context')
+    revalidatePath('/business/dashboard')
+
+    return {
+      success: true,
+      data: updatedContext
+    }
+
+  } catch (error) {
+    console.error('Unexpected error in updateContextWithOptimisticUpdate:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An unexpected error occurred'
