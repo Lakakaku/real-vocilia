@@ -60,16 +60,14 @@ export async function middleware(request: NextRequest) {
   const platform = isAdminDomain ? 'admin' : isBusinessDomain ? 'business' : 'customer'
 
   // Handle root path redirects based on domain
-  if (pathname === '/') {
+  if (pathname === '/' || pathname === '/business' || pathname === '/admin') {
     if (isBusinessDomain) {
-      // Redirect business domain root to login (use /login in production, /business/login in dev)
-      const loginPath = isDevelopment ? '/business/login' : '/login'
-      return NextResponse.redirect(new URL(loginPath, request.url))
+      // Redirect business domain root to login
+      return NextResponse.redirect(new URL('/business/login', request.url))
     }
     if (isAdminDomain) {
-      // Redirect admin domain root to login (use /login in production, /admin/login in dev)
-      const loginPath = isDevelopment ? '/admin/login' : '/login'
-      return NextResponse.redirect(new URL(loginPath, request.url))
+      // Redirect admin domain root to login
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
     // Customer domain shows the main page
   }
@@ -164,43 +162,32 @@ export async function middleware(request: NextRequest) {
   // Route protection for business platform
   if (isBusinessDomain) {
     const protectedPaths = ['/dashboard', '/context', '/feedback', '/verification', '/stores', '/settings', '/onboarding']
-    // In production, the rewrite maps business.vocilia.com/* to /business/*
-    // So the middleware sees /business/* paths even in production
+    // With rewrites, paths always have /business prefix
     const isProtectedPath = protectedPaths.some(path =>
-      pathname.startsWith('/business' + path) || pathname.startsWith(path)
+      pathname.startsWith('/business' + path)
     )
-    const isAuthPath = pathname.includes('/login') || pathname.includes('/signup') || pathname.includes('/reset-password')
+    const isAuthPath = pathname === '/business/login' || pathname === '/business/signup' || pathname === '/business/reset-password'
 
     if (isProtectedPath && !user) {
-      const loginUrl = isDevelopment
-        ? new URL('/business/login', request.url)
-        : new URL('/login', request.url)
-      return NextResponse.redirect(loginUrl)
+      return NextResponse.redirect(new URL('/business/login', request.url))
     }
 
     if (isAuthPath && user) {
-      const dashboardUrl = isDevelopment
-        ? new URL('/business/dashboard', request.url)
-        : new URL('/dashboard', request.url)
-      return NextResponse.redirect(dashboardUrl)
+      return NextResponse.redirect(new URL('/business/dashboard', request.url))
     }
   }
 
   // Route protection for admin platform
   if (isAdminDomain) {
-    const isAuthPath = pathname.includes('/login')
+    const isAuthPath = pathname === '/admin/login'
     const adminPaths = ['/dashboard', '/businesses', '/payments', '/feedback', '/settings']
-    // In production, the rewrite maps admin.vocilia.com/* to /admin/*
-    // So the middleware sees /admin/* paths even in production
+    // With rewrites, paths always have /admin prefix
     const isAdminPath = adminPaths.some(path =>
-      pathname.startsWith('/admin' + path) || pathname.startsWith(path)
+      pathname.startsWith('/admin' + path)
     )
 
     if (!isAuthPath && !user) {
-      const loginUrl = isDevelopment
-        ? new URL('/admin/login', request.url)
-        : new URL('/login', request.url)
-      return NextResponse.redirect(loginUrl)
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
     // TODO: Add admin role verification
