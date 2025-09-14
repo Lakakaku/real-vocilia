@@ -1,65 +1,13 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm run build"
+    "builder": "NIXPACKS"
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "npm start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 30
-  },
-  "services": {
-    "voice-processing": {
-      "name": "vocilia-voice-processing",
-      "source": "backend/voice",
-      "builder": "NIXPACKS",
-      "buildCommand": "npm install && npm run build",
-      "startCommand": "npm run start:voice",
-      "envVars": {
-        "NODE_ENV": "production",
-        "PORT": "${{PORT}}",
-        "OPENAI_API_KEY": "${{OPENAI_API_KEY}}",
-        "SUPABASE_URL": "${{SUPABASE_URL}}",
-        "SUPABASE_SERVICE_ROLE_KEY": "${{SUPABASE_SERVICE_ROLE_KEY}}"
-      }
-    },
-    "background-jobs": {
-      "name": "vocilia-background-jobs",
-      "source": "backend/jobs",
-      "builder": "NIXPACKS",
-      "buildCommand": "npm install && npm run build",
-      "startCommand": "npm run start:jobs",
-      "envVars": {
-        "NODE_ENV": "production",
-        "SUPABASE_URL": "${{SUPABASE_URL}}",
-        "SUPABASE_SERVICE_ROLE_KEY": "${{SUPABASE_SERVICE_ROLE_KEY}}"
-      },
-      "cron": [
-        {
-          "name": "weekly-batch-processor",
-          "schedule": "0 9 * * 1",
-          "command": "npm run job:weekly-batch"
-        },
-        {
-          "name": "verification-reminder",
-          "schedule": "0 10 * * *",
-          "command": "npm run job:verification-reminder"
-        },
-        {
-          "name": "payment-consolidation",
-          "schedule": "0 11 * * 1",
-          "command": "npm run job:payment-consolidation"
-        }
-      ]
-    }
-  },
-  "environments": {
-    "production": {
-      "domain": "vocilia-api.railway.app"
-    }
   }
 }
