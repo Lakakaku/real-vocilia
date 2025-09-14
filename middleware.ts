@@ -59,6 +59,19 @@ export async function middleware(request: NextRequest) {
 
   const platform = isAdminDomain ? 'admin' : isBusinessDomain ? 'business' : 'customer'
 
+  // Handle root path redirects based on domain
+  if (pathname === '/') {
+    if (isBusinessDomain) {
+      // Redirect business domain root to login
+      return NextResponse.redirect(new URL('/business/login', request.url))
+    }
+    if (isAdminDomain) {
+      // Redirect admin domain root to login
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+    // Customer domain shows the main page
+  }
+
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
     const allowedOrigins = getAllowedOrigins(isDevelopment)

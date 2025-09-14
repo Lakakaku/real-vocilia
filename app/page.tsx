@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function HomePage() {
+// Customer platform component
+function CustomerPlatform() {
   const [storeCode, setStoreCode] = useState('')
   const [error, setError] = useState('')
   const router = useRouter()
@@ -115,4 +116,51 @@ export default function HomePage() {
       </div>
     </main>
   )
+}
+
+// Loading component
+function LoadingRedirect() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Loading Vocilia...</h1>
+        <p className="text-gray-600">
+          If you are not redirected,{' '}
+          <a href="/" className="text-blue-600 hover:text-blue-700 underline">
+            click here
+          </a>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// Main component that handles domain-based routing
+export default function HomePage() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [platform, setPlatform] = useState<'customer' | 'business' | 'admin'>('customer')
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check hostname to determine which platform to show
+    const hostname = window.location.hostname
+
+    if (hostname.includes('business.')) {
+      // Redirect to business login
+      router.push('/business/login')
+    } else if (hostname.includes('admin.')) {
+      // Redirect to admin login
+      router.push('/admin/login')
+    } else {
+      // Show customer platform
+      setPlatform('customer')
+      setIsLoading(false)
+    }
+  }, [router])
+
+  if (isLoading) {
+    return <LoadingRedirect />
+  }
+
+  return <CustomerPlatform />
 }
