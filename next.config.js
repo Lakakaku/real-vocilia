@@ -5,6 +5,24 @@ const nextConfig = {
   // Multi-domain routing configuration
   async headers() {
     return [
+      // Cache control for root page - prevent caching issues
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+      },
       // Global security headers (enhanced by middleware for platform-specific needs)
       {
         source: '/:path*',

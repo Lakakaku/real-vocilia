@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Force dynamic rendering to prevent caching issues
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function HomePage() {
   const [storeCode, setStoreCode] = useState('')
   const [error, setError] = useState('')
@@ -105,7 +109,7 @@ export default function HomePage() {
           <p className="text-sm text-gray-500">
             Är du företagare?{' '}
             <a
-              href={process.env.NEXT_PUBLIC_BUSINESS_URL || 'https://business.vocilia.com'}
+              href="https://business.vocilia.com"
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
               Registrera din butik här
