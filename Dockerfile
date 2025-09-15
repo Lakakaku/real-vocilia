@@ -1,46 +1,70 @@
-# Explicitly use Docker Hub official Node.js image to avoid Railway's nixpacks
-FROM docker.io/library/node:18-alpine AS builder
-
-# Install dependencies for native modules
+# Multi-stage build for optimized production image
+FROM node:18-alpine AS deps
+# Install dependencies needed for node-gyp
 RUN apk add --no-cache libc6-compat
-
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-
-# Install ALL dependencies (including dev) for building
+# Install dependencies with cache mount to speed up rebuilds
 RUN npm ci
 
-# Copy all project files
+# Build stage
+FROM node:18-alpine AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+# Copy all source files
 COPY . .
 
 # Build the Next.js application
+ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
-# Production stage - explicitly use Docker Hub to avoid nixpacks
-FROM docker.io/library/node:18-alpine AS runner
-
-# Install dependencies for native modules
-RUN apk add --no-cache libc6-compat
-
+# Production stage
+FROM node:18-alpine AS runner
 WORKDIR /app
 
-# Copy standalone build from builder stage
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Install runtime dependencies
+RUN apk add --no-cache libc6-compat
+
+# Create a non-root user to run the app
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy necessary files from builder
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
 
-# Set environment to production
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Copy the entire .next directory
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 
-# Railway sets PORT environment variable
-ENV PORT=3000
+# Copy node_modules
+COPY --from=builder /app/node_modules ./node_modules
 
-# Expose the port that Next.js runs on
+# Copy all source files needed at runtime
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/components ./components
+COPY --from=builder /app/types ./types
+COPY --from=builder /app/middleware.ts ./
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/tsconfig.json ./
+
+# Set environment variables
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
 EXPOSE 3000
 
-# Use standalone server for production
-CMD ["node", "server.js"]
+# Set PORT for Railway
+ENV PORT 3000
+
+# Start the application
+CMD ["npm", "start"]
