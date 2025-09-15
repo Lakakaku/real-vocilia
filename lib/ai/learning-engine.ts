@@ -371,7 +371,7 @@ class LearningEngine {
     }
 
     // If high rejection rate for specific reason, suggest context enhancement
-    for (const [reason, count] of verificationPatterns.rejectionReasons.entries()) {
+    for (const [reason, count] of Array.from((verificationPatterns.rejectionReasons as Map<string, number>).entries())) {
       if (count > 3) {
         updates.push({
           type: 'enhance_context',
@@ -664,7 +664,7 @@ class LearningEngine {
     }
 
     // Generate insights from themes
-    for (const [theme, count] of themes.entries()) {
+    for (const [theme, count] of Array.from(themes.entries())) {
       if (count > feedbacks.length * 0.2) { // Theme appears in >20% of feedback
         insights.push({
           field: `common_themes.${theme}`,

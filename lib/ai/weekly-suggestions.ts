@@ -477,7 +477,7 @@ class WeeklySuggestionsGenerator {
       anomalyGroups.set(anomaly.type, group)
     }
 
-    for (const [type, group] of anomalyGroups.entries()) {
+    for (const [type, group] of Array.from(anomalyGroups.entries())) {
       if (group.length > 2) {
         suggestions.push({
           id: `fraud_${Date.now()}_${type}`,

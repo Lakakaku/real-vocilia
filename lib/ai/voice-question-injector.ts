@@ -158,7 +158,7 @@ export class VoiceQuestionInjector {
       return {
         success: true,
         injectedText,
-        naturalTransition,
+        naturalTransition: naturalTransition || undefined,
       }
     } catch (error) {
       console.error('Error injecting question:', error)

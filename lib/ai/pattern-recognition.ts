@@ -144,7 +144,7 @@ class PatternRecognitionEngine {
     }
 
     // Identify patterns that meet frequency threshold
-    for (const [phrase, count] of transcriptPatterns.entries()) {
+    for (const [phrase, count] of Array.from(transcriptPatterns.entries())) {
       if (count >= this.minPatternFrequency) {
         const examples = categoryPatterns.get(phrase) || []
 
@@ -333,7 +333,7 @@ class PatternRecognitionEngine {
       }
     }
 
-    return [...new Set([...importantWords, ...phrases])]
+    return Array.from(new Set([...importantWords, ...phrases]))
   }
 
   /**
@@ -393,8 +393,8 @@ class PatternRecognitionEngine {
     const words1 = new Set(text1.toLowerCase().split(/\s+/))
     const words2 = new Set(text2.toLowerCase().split(/\s+/))
 
-    const intersection = new Set([...words1].filter(x => words2.has(x)))
-    const union = new Set([...words1, ...words2])
+    const intersection = new Set(Array.from(words1).filter(x => words2.has(x)))
+    const union = new Set([...Array.from(words1), ...Array.from(words2)])
 
     return intersection.size / union.size
   }
@@ -675,7 +675,7 @@ class PatternRecognitionEngine {
     }
 
     // Detect unusually high frequency
-    for (const [phone, count] of phoneFrequency.entries()) {
+    for (const [phone, count] of Array.from(phoneFrequency.entries())) {
       if (count > 5) { // More than 5 feedbacks in the period
         anomalies.push({
           anomalyId: `behavior_${phone}_${Date.now()}`,

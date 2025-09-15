@@ -40,11 +40,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Analyze context gaps and get discovery suggestions
-    let contextData;
+    let contextData: any = undefined;
     if (business.business_contexts) {
-      if (Array.isArray(business.business_contexts)) {
-        contextData = business.business_contexts[0]?.context_data;
-      } else if (typeof business.business_contexts === 'object') {
+      if (Array.isArray(business.business_contexts) && business.business_contexts.length > 0) {
+        contextData = (business.business_contexts[0] as any)?.context_data;
+      } else if (typeof business.business_contexts === 'object' && !Array.isArray(business.business_contexts)) {
         contextData = (business.business_contexts as any).context_data;
       }
     }

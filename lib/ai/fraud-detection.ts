@@ -87,7 +87,7 @@ class FraudDetectionSystem {
       severity: 'high',
       confidence: 0.85,
       examples: ['5+ feedbacks in 1 hour', 'Same phone different stores'],
-      businessTypes: ['restaurant', 'retail', 'service', 'other'],
+      businessTypes: ['restaurant', 'retail', 'barbershop', 'other'],
       detection: {
         method: 'rule',
         threshold: 5
@@ -101,7 +101,7 @@ class FraudDetectionSystem {
       severity: 'medium',
       confidence: 0.75,
       examples: ['Copy-paste responses', 'Template-like feedback'],
-      businessTypes: ['restaurant', 'retail', 'service', 'other'],
+      businessTypes: ['restaurant', 'retail', 'barbershop', 'other'],
       detection: {
         method: 'ml'
       }
@@ -115,7 +115,7 @@ class FraudDetectionSystem {
       severity: 'medium',
       confidence: 0.7,
       examples: ['Amount 3x average', 'Round numbers only'],
-      businessTypes: ['restaurant', 'retail', 'service'],
+      businessTypes: ['restaurant', 'retail', 'barbershop'],
       detection: {
         method: 'statistical',
         threshold: 3 // Standard deviations
@@ -144,7 +144,7 @@ class FraudDetectionSystem {
       severity: 'critical',
       confidence: 0.95,
       examples: ['Transaction at 3 AM', 'Sunday when closed'],
-      businessTypes: ['restaurant', 'retail', 'service'],
+      businessTypes: ['restaurant', 'retail', 'barbershop'],
       detection: {
         method: 'rule',
         condition: 'outside_operating_hours'
@@ -172,7 +172,7 @@ class FraudDetectionSystem {
       severity: 'high',
       confidence: 0.85,
       examples: ['Wrong department mentioned', 'Non-existent service'],
-      businessTypes: ['retail', 'service'],
+      businessTypes: ['retail', 'barbershop'],
       detection: {
         method: 'rule',
         condition: 'context_validation_failed'
@@ -186,7 +186,7 @@ class FraudDetectionSystem {
       severity: 'critical',
       confidence: 0.9,
       examples: ['Wrong staff names', 'Fictional positions'],
-      businessTypes: ['restaurant', 'retail', 'service'],
+      businessTypes: ['restaurant', 'retail', 'barbershop'],
       detection: {
         method: 'rule',
         condition: 'staff_name_not_in_context'
@@ -287,14 +287,14 @@ class FraudDetectionSystem {
     })
 
     // Service fraud patterns
-    database.set('service', {
-      businessType: 'service',
+    database.set('barbershop', {
+      businessType: 'barbershop',
       commonPatterns: [
         {
           patternId: 'phantom_appointment',
           name: 'Phantom Appointment',
           description: 'Claims service without appointment record',
-          businessType: 'service',
+          businessType: 'barbershop',
           frequency: 5,
           lastDetected: new Date(),
           effectiveness: 0.88,
@@ -348,7 +348,7 @@ class FraudDetectionSystem {
     let maxSeverityScore = 0
 
     // Check each fraud indicator
-    for (const [id, indicator] of this.fraudIndicators.entries()) {
+    for (const [id, indicator] of Array.from(this.fraudIndicators.entries())) {
       const result = await this.checkIndicator(indicator, feedbackData, businessContext)
 
       if (result.triggered) {
@@ -784,7 +784,7 @@ class FraudDetectionSystem {
     ]
 
     // Update trends for all business types
-    for (const [type, database] of this.industryDatabase.entries()) {
+    for (const [type, database] of Array.from(this.industryDatabase.entries())) {
       database.recentTrends = [...database.recentTrends, ...newTrends].slice(-10)
     }
   }

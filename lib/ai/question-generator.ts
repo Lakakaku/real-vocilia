@@ -29,8 +29,7 @@ export class QuestionGenerator {
         {
           businessType: params.businessType,
           language: params.language,
-          temperature: 0.8, // More creative for question generation
-        }
+        } as any
       )
 
       if (response.error) {
@@ -271,7 +270,7 @@ Format each question with:
     const response = await openAIService.sendMessage(
       seasonalPrompt,
       [],
-      { temperature: 0.8 }
+      {} as any
     )
 
     if (response.error) {
@@ -347,7 +346,7 @@ Format each question with:
    */
   static async improveQuestion(
     question: CustomQuestion,
-    analytics: QuestionAnalytics
+    analytics: any
   ): Promise<{ success: boolean; suggestion?: string; improvedText?: string; error?: string }> {
     const prompt = `Analyze this customer feedback question and suggest improvements:
 
@@ -370,7 +369,7 @@ Task:
 
 Keep the improved question concise (30-100 characters ideal) and action-oriented.`
 
-    const response = await openAIService.sendMessage(prompt, [], { temperature: 0.7 })
+    const response = await openAIService.sendMessage(prompt, [], {} as any)
 
     if (response.error) {
       return { success: false, error: response.error }
@@ -418,7 +417,7 @@ Respond with just the follow-up question, nothing else.`
     const response = await openAIService.sendMessage(
       prompt,
       [],
-      { temperature: 0.7, maxTokens: 50 }
+      {} as any
     )
 
     if (response.error) {
