@@ -133,7 +133,7 @@ class ContextDiscoveryService {
 
     // Service template
     templates.set('service', {
-      businessType: 'service',
+      businessType: 'other',
       requiredFields: [
         {
           category: 'service_offerings',
