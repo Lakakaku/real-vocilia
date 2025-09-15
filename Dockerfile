@@ -27,17 +27,10 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Copy built application from builder stage
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
+# Copy standalone build from builder stage
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/middleware.ts ./
-COPY --from=builder /app/app ./app
-COPY --from=builder /app/lib ./lib
-COPY --from=builder /app/components ./components
-COPY --from=builder /app/types ./types
 
 # Set environment to production
 ENV NODE_ENV=production
@@ -49,5 +42,5 @@ ENV PORT=3000
 # Expose the port that Next.js runs on
 EXPOSE 3000
 
-# Use Railway's PORT environment variable
-CMD ["npm", "start"]
+# Use standalone server for production
+CMD ["node", "server.js"]

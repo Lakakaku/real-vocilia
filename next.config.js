@@ -201,6 +201,9 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
+  // Output configuration for Railway deployment
+  output: 'standalone',
+
   // Performance optimizations
   poweredByHeader: false,
   compress: true,
