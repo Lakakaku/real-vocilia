@@ -157,8 +157,8 @@ class ContextValidator {
       }
     ])
 
-    // Service validation rules
-    rules.set('service', [
+    // Service validation rules (using 'other' for general service businesses)
+    rules.set('other', [
       {
         ruleId: 'service_types_required',
         category: 'service_offerings',
