@@ -93,8 +93,9 @@ export function QuestionCreationModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const finalData = {
-      ...formData,
+    const { stores: _, ...restFormData } = formData
+    const finalData: QuestionFormData = {
+      ...restFormData,
       stores: selectedStores.length > 0 ? selectedStores : 'all',
     }
 
