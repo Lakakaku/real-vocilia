@@ -131,8 +131,8 @@ class ContextDiscoveryService {
       ]
     })
 
-    // Service template
-    templates.set('service', {
+    // Service template (using 'other' for general service businesses)
+    templates.set('other', {
       businessType: 'other',
       requiredFields: [
         {
