@@ -40,17 +40,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Analyze context gaps and get discovery suggestions
+    const contextData = Array.isArray(business.business_contexts)
+      ? business.business_contexts[0]?.context_data
+      : business.business_contexts?.context_data
+
     const discoveryResult = await contextDiscoveryService.analyzeContextGaps(
       business.id,
       business.business_type,
-      business.business_contexts?.context_data
+      contextData
     )
 
     // Get improvement suggestions
     const suggestions = await contextDiscoveryService.getSuggestionsForImprovement(
       business.id,
       business.business_type,
-      business.business_contexts?.context_data
+      contextData
     )
 
     return NextResponse.json({
