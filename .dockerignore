@@ -49,6 +49,7 @@ docs
 .vscode
 .idea
 
-# Railway
+# Railway config files (keep in repo but exclude from Docker build)
 railway.json
 railway.toml
+.nixpacksignore
