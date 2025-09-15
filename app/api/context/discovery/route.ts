@@ -40,9 +40,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Analyze context gaps and get discovery suggestions
-    const contextData = Array.isArray(business.business_contexts)
-      ? business.business_contexts[0]?.context_data
-      : business.business_contexts?.context_data
+    let contextData;
+    if (business.business_contexts) {
+      if (Array.isArray(business.business_contexts)) {
+        contextData = business.business_contexts[0]?.context_data;
+      } else if (typeof business.business_contexts === 'object') {
+        contextData = (business.business_contexts as any).context_data;
+      }
+    }
 
     const discoveryResult = await contextDiscoveryService.analyzeContextGaps(
       business.id,
