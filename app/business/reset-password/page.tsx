@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ResetPasswordRequestForm } from '@/components/auth/reset-password-request-form'
