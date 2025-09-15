@@ -48,6 +48,7 @@ COPY --from=builder /app/types ./types
 COPY --from=builder /app/middleware.ts ./
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/server.js ./
 COPY --from=builder /app/sentry.*.config.ts ./
 COPY --from=builder /app/postcss.config.js ./
 COPY --from=builder /app/tailwind.config.ts ./
@@ -55,5 +56,5 @@ COPY --from=builder /app/tailwind.config.ts ./
 # Expose port (Railway will override with PORT env var)
 EXPOSE 3000
 
-# Start the Next.js application
-CMD ["npm", "start"]
+# Start the Next.js application with custom server
+CMD ["node", "server.js"]
