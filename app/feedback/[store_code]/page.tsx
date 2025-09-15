@@ -6,7 +6,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function FeedbackPage() {
   const params = useParams()
-  const storeCode = params.store_code as string
+  const storeCode = params?.store_code as string
   const [store, setStore] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
