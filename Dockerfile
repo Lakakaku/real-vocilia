@@ -1,5 +1,5 @@
-# Use the official Node.js 18 Alpine image for smaller size
-FROM node:18-alpine AS builder
+# Explicitly use Docker Hub official Node.js image to avoid Railway's nixpacks
+FROM docker.io/library/node:18-alpine AS builder
 
 # Install dependencies for native modules
 RUN apk add --no-cache libc6-compat
@@ -19,8 +19,8 @@ COPY . .
 # Build the Next.js application
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS runner
+# Production stage - explicitly use Docker Hub to avoid nixpacks
+FROM docker.io/library/node:18-alpine AS runner
 
 # Install dependencies for native modules
 RUN apk add --no-cache libc6-compat
@@ -35,12 +35,15 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/middleware.ts ./
 
-# Expose the port that Next.js runs on
-EXPOSE 3000
-
 # Set environment to production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Start the application
+# Railway sets PORT environment variable
+ENV PORT=3000
+
+# Expose the port that Next.js runs on
+EXPOSE 3000
+
+# Use Railway's PORT environment variable
 CMD ["npm", "start"]
