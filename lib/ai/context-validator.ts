@@ -238,7 +238,8 @@ class ContextValidator {
     ]
 
     // Add generic rules to all business types
-    for (const [businessType, specificRules] of rules.entries()) {
+    const rulesEntries = Array.from(rules.entries())
+    for (const [businessType, specificRules] of rulesEntries) {
       rules.set(businessType, [...specificRules, ...genericRules])
     }
 
@@ -287,9 +288,9 @@ class ContextValidator {
       commonValues: ['clothing', 'electronics', 'home', 'food', 'beauty', 'sports']
     })
 
-    // Service benchmarks
+    // Service benchmarks (using 'other' for general service businesses)
     benchmarks.set('service_appointment_duration', {
-      businessType: 'service',
+      businessType: 'other',
       category: 'service_offerings',
       field: 'appointment_duration',
       minValue: 15,
@@ -424,7 +425,8 @@ class ContextValidator {
     const warnings: ValidationWarning[] = []
     const suggestions: ValidationSuggestion[] = []
 
-    for (const [key, benchmark] of this.industryBenchmarks.entries()) {
+    const benchmarkEntries = Array.from(this.industryBenchmarks.entries())
+    for (const [key, benchmark] of benchmarkEntries) {
       if (benchmark.businessType !== businessType) continue
 
       const categoryData = context[benchmark.category] || {}
@@ -633,15 +635,18 @@ class ContextValidator {
   /**
    * Update category score
    */
+  private categoryTracking = new Map<string, { valid: number; total: number }>()
+
   private updateCategoryScore(
     scores: Map<string, number>,
     category: string,
     isValid: boolean
   ): void {
-    const current = scores.get(category) || { valid: 0, total: 0 }
+    const current = this.categoryTracking.get(category) || { valid: 0, total: 0 }
     const valid = isValid ? current.valid + 1 : current.valid
     const total = current.total + 1
 
+    this.categoryTracking.set(category, { valid, total })
     scores.set(category, (valid / total) * 100)
   }
 
@@ -662,21 +667,20 @@ class ContextValidator {
     min: number
     max: number
   } {
-    const ranges: Record<BusinessType, { min: number; max: number }> = {
+    const ranges: Partial<Record<BusinessType, { min: number; max: number }>> = {
       restaurant: { min: 50, max: 500 },
       retail: { min: 100, max: 1000 },
-      service: { min: 200, max: 2000 },
       other: { min: 50, max: 1000 }
     }
 
-    return ranges[businessType] || ranges.other
+    return ranges[businessType] || ranges.other || { min: 50, max: 1000 }
   }
 
   /**
    * Get important fields for business type
    */
   private getImportantFields(businessType: BusinessType): string[] {
-    const fields: Record<BusinessType, string[]> = {
+    const fields: Partial<Record<BusinessType, string[]>> = {
       restaurant: [
         'physical_layout.seating_capacity',
         'menu_details.menu_categories',
@@ -690,12 +694,6 @@ class ContextValidator {
         'operational_details.peak_shopping_times',
         'fraud_indicators.indicators'
       ],
-      service: [
-        'service_offerings.service_types',
-        'service_offerings.pricing_structure',
-        'client_management.appointment_system',
-        'fraud_indicators.indicators'
-      ],
       other: [
         'operational_details.operating_hours',
         'operational_details.average_transaction',
@@ -703,7 +701,7 @@ class ContextValidator {
       ]
     }
 
-    return fields[businessType] || fields.other
+    return fields[businessType] || fields.other || []
   }
 
   /**
