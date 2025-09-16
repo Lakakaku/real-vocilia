@@ -1,4 +1,3 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // CORS configuration
@@ -116,94 +115,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Initialize Supabase client
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value })
-          response = NextResponse.next({
-            request,
-          })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.delete(name)
-          response = NextResponse.next({
-            request,
-          })
-          response.cookies.delete(name)
-        },
-      },
-    }
-  )
-
-  // Refresh session if expired - required for Server Components
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Route protection for customer platform
-  if (isCustomerDomain) {
-    // Customer platform has minimal protected routes
-    const protectedPaths = ['/account', '/history']
-    const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path))
-
-    if (isProtectedPath && !user) {
-      // For customer platform, we might want to handle this differently
-      // For now, redirect to home
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-  }
-
-  // Route protection for business platform
-  if (isBusinessDomain) {
-    const protectedPaths = ['/dashboard', '/context', '/feedback', '/verification', '/stores', '/settings', '/onboarding']
-    // With rewrites, paths always have /business prefix
-    const isProtectedPath = protectedPaths.some(path =>
-      pathname.startsWith('/business' + path)
-    )
-    const isAuthPath = pathname === '/business/login' || pathname === '/business/signup' || pathname === '/business/reset-password'
-
-    if (isProtectedPath && !user) {
-      return NextResponse.redirect(new URL('/business/login', request.url))
-    }
-
-    if (isAuthPath && user) {
-      return NextResponse.redirect(new URL('/business/dashboard', request.url))
-    }
-  }
-
-  // Route protection for admin platform
-  if (isAdminDomain) {
-    const isAuthPath = pathname === '/admin/login'
-    const adminPaths = ['/dashboard', '/businesses', '/payments', '/feedback', '/settings']
-    // With rewrites, paths always have /admin prefix
-    const isAdminPath = adminPaths.some(path =>
-      pathname.startsWith('/admin' + path)
-    )
-
-    if (!isAuthPath && !user) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
-
-    // TODO: Add admin role verification
-    // This would require checking the admin_users table or user metadata
-    if (user && isAdminPath) {
-      // Verify admin role here
-      // const isAdmin = await verifyAdminRole(user.id, supabase)
-      // if (!isAdmin) {
-      //   return NextResponse.redirect(new URL('/unauthorized', request.url))
-      // }
-    }
-  }
+  // Note: Auth protection is handled by individual pages/routes
+  // since middleware runs on Edge Runtime and cannot use Supabase client
 
   // Log domain routing for debugging (remove in production)
   if (isDevelopment) {
-    console.log(`[Middleware] Platform: ${platform}, Path: ${pathname}, User: ${user?.email || 'anonymous'}`)
+    console.log(`[Middleware] Platform: ${platform}, Path: ${pathname}`)
   }
 
   return response

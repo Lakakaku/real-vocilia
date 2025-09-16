@@ -70,7 +70,7 @@ class MemoryRateLimitStore {
 
   private cleanup(): void {
     const now = Date.now();
-    for (const [key, data] of this.store.entries()) {
+    for (const [key, data] of Array.from(this.store.entries())) {
       if (now > data.resetTime) {
         this.store.delete(key);
       }
