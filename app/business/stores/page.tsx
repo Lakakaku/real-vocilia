@@ -484,7 +484,7 @@ export default function StoresPage() {
           <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No stores found</h3>
           <p className="text-gray-600 mb-4">
-            No stores match your search for "{searchTerm}"
+            No stores match your search for &quot;{searchTerm}&quot;
           </p>
           <Button
             variant="outline"

@@ -326,7 +326,7 @@ export default function StoreQRPage() {
               <div className="p-3 bg-purple-50 rounded-lg">
                 <h4 className="font-semibold text-purple-900">Window QR Code</h4>
                 <p className="text-sm text-purple-700 mt-1">
-                  Place on windows or entrances where it's visible from outside
+                  Place on windows or entrances where it&apos;s visible from outside
                 </p>
               </div>
             </CardContent>

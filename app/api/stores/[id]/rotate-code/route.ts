@@ -30,7 +30,7 @@ export async function PUT(
     // Verify store belongs to business
     const { data: store, error: storeError } = await supabase
       .from('stores')
-      .select('id, business_id, name, store_code')
+      .select('id, business_id, name, store_code, is_active')
       .eq('id', storeId)
       .eq('business_id', businessId)
       .single()

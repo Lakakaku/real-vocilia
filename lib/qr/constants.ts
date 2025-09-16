@@ -2,28 +2,61 @@
 
 export const QR_SIZES = {
   counter: {
+    displayName: 'Counter Display',
+    description: 'Small QR code for point-of-sale counters',
+    useCase: 'Place near cash register for easy scanning',
     widthCm: 10,
     heightCm: 10,
+    dimensions: {
+      width: 10,
+      height: 10,
+      qrSize: 8
+    },
     qrSizePx: 280,
     dpi: 300,
+    printSpecs: {
+      dpi: 300,
+    },
     paddingPx: 20,
     fontSizeCode: 14,
     fontSizeInstructions: 10,
   },
   wall: {
+    displayName: 'Wall Display',
+    description: 'Medium QR code for wall mounting',
+    useCase: 'Mount on walls or bulletin boards',
     widthCm: 21,
     heightCm: 21,
+    dimensions: {
+      width: 21,
+      height: 21,
+      qrSize: 17
+    },
     qrSizePx: 600,
     dpi: 300,
+    printSpecs: {
+      dpi: 300,
+    },
     paddingPx: 30,
     fontSizeCode: 18,
     fontSizeInstructions: 12,
   },
   window: {
+    displayName: 'Window Display',
+    description: 'Large QR code for storefront windows',
+    useCase: 'Display in storefront windows or entrance doors',
     widthCm: 30,
     heightCm: 30,
+    dimensions: {
+      width: 30,
+      height: 30,
+      qrSize: 25
+    },
     qrSizePx: 900,
     dpi: 300,
+    printSpecs: {
+      dpi: 300,
+    },
     paddingPx: 40,
     fontSizeCode: 24,
     fontSizeInstructions: 14,

@@ -36,7 +36,7 @@ export interface QRDownloadHistory {
   store_id: string;
   business_id: string;
   template_id: string;
-  format: 'PDF' | 'PNG' | 'SVG';
+  format: 'PDF' | 'PNG' | 'SVG' | 'ZIP';
   file_url?: string;
   file_size_kb?: number;
   downloaded_by?: string;
