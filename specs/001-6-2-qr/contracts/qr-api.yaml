@@ -1,0 +1,430 @@
+openapi: 3.0.0
+info:
+  title: Vocilia QR Code Generation API
+  description: API for generating and managing QR codes for store feedback
+  version: 1.0.0
+servers:
+  - url: https://business.vocilia.com/api
+    description: Production server
+
+paths:
+  /stores/qr/generate:
+    post:
+      summary: Generate QR code for a store
+      description: Generates a QR code for a specific store with the requested template and format
+      tags:
+        - QR Generation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - storeId
+                - templateName
+                - format
+              properties:
+                storeId:
+                  type: string
+                  format: uuid
+                  description: UUID of the store
+                templateName:
+                  type: string
+                  enum: [counter, wall, window]
+                  description: Size template for the QR code
+                format:
+                  type: string
+                  enum: [PDF, PNG, SVG]
+                  description: Output file format
+                includeLogo:
+                  type: boolean
+                  default: true
+                  description: Whether to include Vocilia logo
+      responses:
+        '200':
+          description: QR code generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      downloadUrl:
+                        type: string
+                        format: uri
+                        description: Signed URL for downloading the QR code
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        description: URL expiration time
+                      fileSize:
+                        type: integer
+                        description: File size in KB
+                      cached:
+                        type: boolean
+                        description: Whether this was served from cache
+                      qrVersion:
+                        type: integer
+                        description: Version of the QR code
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Store not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /stores/qr/download/{storeId}:
+    get:
+      summary: Download specific QR code variant
+      description: Downloads a previously generated QR code or generates a new one
+      tags:
+        - QR Download
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: storeId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID of the store
+        - in: query
+          name: template
+          required: true
+          schema:
+            type: string
+            enum: [counter, wall, window]
+          description: Size template
+        - in: query
+          name: format
+          required: true
+          schema:
+            type: string
+            enum: [PDF, PNG, SVG]
+          description: File format
+      responses:
+        '200':
+          description: File download initiated
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '404':
+          description: Store not found
+        '429':
+          description: Rate limit exceeded
+
+  /stores/qr/bulk-download:
+    post:
+      summary: Bulk download QR codes for multiple stores
+      description: Generates and downloads QR codes for all stores of a business
+      tags:
+        - QR Bulk Operations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - businessId
+              properties:
+                businessId:
+                  type: string
+                  format: uuid
+                  description: UUID of the business
+                storeIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Optional list of specific store IDs (if empty, all stores)
+                template:
+                  type: string
+                  enum: [counter, wall, window]
+                  default: wall
+                  description: Template to use for all QR codes
+                format:
+                  type: string
+                  enum: [PDF, PNG, SVG]
+                  default: PDF
+                  description: Format for all files
+      responses:
+        '202':
+          description: Bulk generation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+                        format: uuid
+                        description: Job ID to track progress
+                      totalStores:
+                        type: integer
+                        description: Number of stores to process
+                      estimatedTime:
+                        type: integer
+                        description: Estimated completion time in seconds
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limit exceeded
+
+  /stores/qr/bulk-status/{jobId}:
+    get:
+      summary: Check bulk download status
+      description: Gets the status of a bulk QR code generation job
+      tags:
+        - QR Bulk Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Job ID from bulk download request
+      responses:
+        '200':
+          description: Job status retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum: [pending, processing, completed, failed]
+                      progress:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Completion percentage
+                      completedStores:
+                        type: integer
+                      totalStores:
+                        type: integer
+                      downloadUrl:
+                        type: string
+                        format: uri
+                        description: ZIP file URL when completed
+                      error:
+                        type: string
+                        description: Error message if failed
+        '404':
+          description: Job not found
+
+  /stores/qr/history:
+    get:
+      summary: Get QR code download history
+      description: Retrieves download history for the authenticated business
+      tags:
+        - QR Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: storeId
+          schema:
+            type: string
+            format: uuid
+          description: Filter by specific store
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+          description: Start date for filtering
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+          description: End date for filtering
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+          description: Results per page
+      responses:
+        '200':
+          description: Download history retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      downloads:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            storeId:
+                              type: string
+                              format: uuid
+                            storeName:
+                              type: string
+                            template:
+                              type: string
+                            format:
+                              type: string
+                            downloadedAt:
+                              type: string
+                              format: date-time
+                            downloadedBy:
+                              type: string
+                            fileSize:
+                              type: integer
+                      pagination:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          total:
+                            type: integer
+                          totalPages:
+                            type: integer
+        '401':
+          description: Unauthorized
+
+  /stores/qr/templates:
+    get:
+      summary: Get available QR code templates
+      description: Lists all available QR code size templates with specifications
+      tags:
+        - QR Configuration
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        widthCm:
+                          type: number
+                        heightCm:
+                          type: number
+                        qrSizePx:
+                          type: integer
+                        dpi:
+                          type: integer
+                        description:
+                          type: string
+                        useCase:
+                          type: string
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Human-readable error message
+            details:
+              type: object
+              description: Additional error details
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase authentication token

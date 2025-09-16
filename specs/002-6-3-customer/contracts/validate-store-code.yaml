@@ -1,0 +1,134 @@
+openapi: 3.0.0
+info:
+  title: Store Code Validation API
+  version: 1.0.0
+  description: API endpoint for validating 6-digit store codes
+
+paths:
+  /api/validate-store-code:
+    post:
+      summary: Validate a store code
+      description: Validates a 6-digit store code and returns redirect URL if valid
+      operationId: validateStoreCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  description: 6-digit store code
+                  example: "123456"
+      responses:
+        '200':
+          description: Validation result (success or failure)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - redirect_url
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        redirect_url:
+          type: string
+          format: uri
+          example: "https://vocilia.com/feedback/123456"
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum: [INVALID_FORMAT, NOT_FOUND]
+            message:
+              type: string
+              example: "This code is not recognized. Please check and try again"
+
+    RateLimitResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - retry_after
+          properties:
+            code:
+              type: string
+              enum: [RATE_LIMITED]
+            message:
+              type: string
+              example: "Too many attempts. Please wait a minute and try again"
+            retry_after:
+              type: integer
+              description: Seconds until retry is allowed
+              example: 45
+
+    ServerErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum: [NETWORK_ERROR]
+            message:
+              type: string
+              example: "Connection issue. Please check your internet and try again"

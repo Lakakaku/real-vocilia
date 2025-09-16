@@ -1,0 +1,30 @@
+# Railway Environment Variables for real-vocilia project
+# Copy and paste these into Railway dashboard at:
+# https://railway.app/project/[PROJECT_ID]/service/[SERVICE_ID]/settings/environment
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://ervnxnbxsaaeakbvwieh.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydm54bmJ4c2FhZWFrYnZ3aWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NzAzNjMsImV4cCI6MjA3MzM0NjM2M30.Hf-9GCfPh8-dTTGgO51GFKM-BRxQJp6h40XDACVjXIc
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydm54bmJ4c2FhZWFrYnZ3aWVoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNjI0MzY3NCwiZXhwIjoyMDQxODE5Njc0fQ.sI8x69YFMBBNQAJlDPTW6t-xN1VhP9uRlEqCrU7j1Ys
+
+# Multi-Domain URLs (Production)
+NEXT_PUBLIC_CUSTOMER_URL=https://vocilia.com
+NEXT_PUBLIC_BUSINESS_URL=https://business.vocilia.com
+NEXT_PUBLIC_ADMIN_URL=https://admin.vocilia.com
+
+# Email Service (Resend)
+RESEND_API_KEY=re_RC78Nz9Z_FnAVBnstfxwxx21mYTD2yeD3
+RESEND_FROM_EMAIL=noreply@vocilia.com
+SENDER_EMAIL_ADDRESS=noreply@vocilia.com
+
+# OpenAI Configuration
+OPENAI_API_KEY=[YOUR_OPENAI_API_KEY_HERE]
+
+# Production Environment
+NODE_ENV=production
+NEXT_TELEMETRY_DISABLED=1
+
+# Application URLs
+NEXT_PUBLIC_APP_URL=https://vocilia.com
+
+# Railway sets PORT automatically, no need to specify it
