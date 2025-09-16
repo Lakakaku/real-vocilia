@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -48,19 +48,7 @@ export function OnboardingFlow({ initialStep = 1, businessId }: OnboardingFlowPr
     estimatedTimeRemaining: Math.max(0, (TOTAL_ONBOARDING_STEPS - onboardingData.completedSteps.length) * 2)
   }
 
-  // Load saved progress on mount
-  useEffect(() => {
-    loadProgress()
-  }, [])
-
-  // Auto-save progress every time data changes
-  useEffect(() => {
-    if (onboardingData.currentStep > 0) {
-      saveProgress()
-    }
-  }, [onboardingData])
-
-  const loadProgress = async () => {
+  const loadProgress = useCallback(async () => {
     setIsLoading(true)
     try {
       const { data: business, error } = await supabase
@@ -95,9 +83,9 @@ export function OnboardingFlow({ initialStep = 1, businessId }: OnboardingFlowPr
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [businessId, supabase, router])
 
-  const saveProgress = async () => {
+  const saveProgress = useCallback(async () => {
     setIsSaving(true)
     try {
       const update: BusinessOnboardingUpdate = {
@@ -141,7 +129,19 @@ export function OnboardingFlow({ initialStep = 1, businessId }: OnboardingFlowPr
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [onboardingData, businessId, supabase])
+
+  // Load saved progress on mount
+  useEffect(() => {
+    loadProgress()
+  }, [loadProgress])
+
+  // Auto-save progress every time data changes
+  useEffect(() => {
+    if (onboardingData.currentStep > 0) {
+      saveProgress()
+    }
+  }, [onboardingData, saveProgress])
 
   const handleNext = async (stepData: any) => {
     const updatedData = {

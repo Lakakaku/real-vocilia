@@ -30,16 +30,16 @@ export default function OfflinePage() {
 
         {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900">
-          You're Offline
+          You&apos;re Offline
         </h1>
 
         {/* Description */}
         <div className="space-y-3 text-gray-600">
           <p>
-            It looks like you don't have an internet connection right now.
+            It looks like you don&apos;t have an internet connection right now.
           </p>
           <p>
-            To use Vocilia and validate store codes, you'll need to be online.
+            To use Vocilia and validate store codes, you&apos;ll need to be online.
           </p>
         </div>
 
@@ -66,7 +66,7 @@ export default function OfflinePage() {
               <div className="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                 3
               </div>
-              <p>Refresh this page when you're back online</p>
+              <p>Refresh this page when you&apos;re back online</p>
             </div>
           </div>
         </div>
@@ -82,10 +82,10 @@ export default function OfflinePage() {
         {/* Help Text */}
         <div className="text-xs text-gray-500 space-y-2">
           <p>
-            This page will automatically refresh when you're back online.
+            This page will automatically refresh when you&apos;re back online.
           </p>
           <p>
-            Need help? Visit our support page when you're connected.
+            Need help? Visit our support page when you&apos;re connected.
           </p>
         </div>
 

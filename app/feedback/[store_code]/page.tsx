@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function FeedbackPage() {
@@ -19,11 +19,7 @@ export default function FeedbackPage() {
 
   const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    validateStoreCode()
-  }, [storeCode])
-
-  const validateStoreCode = async () => {
+  const validateStoreCode = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -54,7 +50,11 @@ export default function FeedbackPage() {
       setError('Ett fel uppstod. Vänligen försök igen.')
       setLoading(false)
     }
-  }
+  }, [storeCode, supabase])
+
+  useEffect(() => {
+    validateStoreCode()
+  }, [validateStoreCode])
 
   const handlePhoneValidation = (value: string) => {
     // Swedish phone number validation

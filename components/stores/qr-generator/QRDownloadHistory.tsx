@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -31,11 +31,7 @@ export function QRDownloadHistory({
 
   const dateLocale = language === 'sv' ? sv : enUS;
 
-  useEffect(() => {
-    loadHistory();
-  }, [page, storeId]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -70,7 +66,11 @@ export function QRDownloadHistory({
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, storeId, language]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   const getFormatIcon = (format: string) => {
     switch (format) {
@@ -78,7 +78,7 @@ export function QRDownloadHistory({
         return <FileText className="h-4 w-4" />;
       case 'PNG':
       case 'SVG':
-        return <Image className="h-4 w-4" />;
+        return <Image className="h-4 w-4" />; {/* eslint-disable-line jsx-a11y/alt-text */}
       case 'ZIP':
         return <Package className="h-4 w-4" />;
       default:

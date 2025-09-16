@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,11 +38,7 @@ export function QRPreview({
   const translations = TRANSLATIONS[language];
   const specs = QR_SIZES[template];
 
-  useEffect(() => {
-    generatePreview();
-  }, [storeId, template, includeLogo, language]);
-
-  const generatePreview = async () => {
+  const generatePreview = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,7 +69,11 @@ export function QRPreview({
     } finally {
       setLoading(false);
     }
-  };
+  }, [storeId, template, includeLogo, language, translations.error]);
+
+  useEffect(() => {
+    generatePreview();
+  }, [generatePreview]);
 
   const handlePrint = () => {
     if (!previewUrl) return;
@@ -174,9 +175,11 @@ export function QRPreview({
               <TabsContent value="qr" className="space-y-4">
                 {/* QR Code Image */}
                 <div className="bg-white p-6 rounded-lg border-2 border-gray-200">
-                  <img
+                  <Image
                     src={previewUrl}
                     alt={`QR Code for ${storeName}`}
+                    width={specs.qrSizePx}
+                    height={specs.qrSizePx}
                     className="w-full h-auto max-w-xs mx-auto"
                   />
 

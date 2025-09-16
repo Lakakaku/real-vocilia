@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Loader2, Download, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,11 +35,7 @@ export function QRCodeDisplay({
   const translations = TRANSLATIONS[language];
   const specs = QR_SIZES[size];
 
-  useEffect(() => {
-    generateQR();
-  }, [storeCode, size, includeLogo]);
-
-  const generateQR = async () => {
+  const generateQR = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -57,7 +54,11 @@ export function QRCodeDisplay({
     } finally {
       setLoading(false);
     }
-  };
+  }, [storeCode, specs.qrSizePx, includeLogo, translations.error]);
+
+  useEffect(() => {
+    generateQR();
+  }, [generateQR]);
 
   const handleDownload = () => {
     if (!qrDataUrl) return;
@@ -93,9 +94,11 @@ export function QRCodeDisplay({
           <>
             {/* QR Code Display */}
             <div className="bg-white p-6 rounded-lg border-2 border-gray-200">
-              <img
+              <Image
                 src={qrDataUrl}
                 alt={`QR Code for ${storeName}`}
+                width={specs.qrSizePx}
+                height={specs.qrSizePx}
                 className="w-full h-auto max-w-xs mx-auto"
               />
 
