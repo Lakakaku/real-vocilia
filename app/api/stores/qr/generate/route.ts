@@ -13,6 +13,8 @@ import {
   ensureStorageBucket
 } from '@/lib/supabase/qr-client';
 import { generateWithTemplate } from '@/lib/qr/templates';
+
+export const dynamic = 'force-dynamic';
 import { generatePDF } from '@/lib/qr/pdf-generator';
 import { calculateChecksum, generateCacheKey } from '@/lib/qr/generator';
 import { QRGenerateRequest, QRGenerateResponse } from '@/lib/types/qr';

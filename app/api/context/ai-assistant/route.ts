@@ -11,6 +11,8 @@ import { conversationManager } from '@/lib/ai/conversation-manager'
 import PromptBuilder from '@/lib/ai/prompt-builder'
 import type { BusinessType } from '@/types/onboarding'
 
+export const dynamic = 'force-dynamic'
+
 // Request validation schema
 const requestSchema = z.object({
   message: z.string().min(1).max(2000),
