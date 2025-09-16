@@ -1,5 +1,5 @@
-# Use Node.js 18 Alpine for smaller image size
-FROM node:18-alpine AS builder
+# Use Node.js 20 Alpine for smaller image size
+FROM node:20-alpine AS builder
 
 # Install dependencies for native modules
 RUN apk add --no-cache libc6-compat
@@ -20,7 +20,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
 # Production image
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 # Install runtime dependencies
 RUN apk add --no-cache libc6-compat
