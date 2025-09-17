@@ -205,66 +205,66 @@ export async function GET(request: NextRequest) {
     // Process and enhance session data
     const now = new Date()
     const enhancedSessions = sessions.map(session => {
-      const deadlineDate = new Date(session.deadline)
+      const deadlineDate = new Date((session as any).deadline)
       const isOverdue = deadlineDate < now
       const hoursRemaining = Math.max(0, (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60))
 
       // Calculate progress metrics
-      const completionRate = session.total_transactions > 0
-        ? Math.round((session.verified_transactions / session.total_transactions) * 100)
+      const completionRate = (session as any).total_transactions > 0
+        ? Math.round(((session as any).verified_transactions / (session as any).total_transactions) * 100)
         : 0
 
-      const approvalRate = session.verified_transactions > 0
-        ? Math.round(((session.approved_count || 0) / session.verified_transactions) * 100)
+      const approvalRate = (session as any).verified_transactions > 0
+        ? Math.round((((session as any).approved_count || 0) / (session as any).verified_transactions) * 100)
         : 0
 
       // Calculate urgency score using business rules
       const batchData = {
-        ...session.payment_batches,
-        deadline: session.deadline,
-        status: session.status,
-        total_amount: session.payment_batches?.total_amount || 0,
-        total_transactions: session.total_transactions,
+        ...(session as any).payment_batches,
+        deadline: (session as any).deadline,
+        status: (session as any).status,
+        total_amount: (session as any).payment_batches?.total_amount || 0,
+        total_transactions: (session as any).total_transactions,
       }
 
       const urgencyScore = PaymentBatchBusinessRules.calculateUrgencyScore(batchData)
       const urgencyLevel = PaymentBatchBusinessRules.getUrgencyLevel(deadlineDate)
 
       // Determine risk level based on average risk score
-      const riskLevel = (session.average_risk_score || 0) > 70 ? 'high' :
-        (session.average_risk_score || 0) > 40 ? 'medium' : 'low'
+      const riskLevel = ((session as any).average_risk_score || 0) > 70 ? 'high' :
+        ((session as any).average_risk_score || 0) > 40 ? 'medium' : 'low'
 
       return {
-        session_id: session.id,
+        session_id: (session as any).id,
         business: {
-          id: session.business_id,
-          name: session.businesses?.name,
-          contact_email: session.businesses?.contact_email,
-          status: session.businesses?.business_status,
+          id: (session as any).business_id,
+          name: (session as any).businesses?.name,
+          contact_email: (session as any).businesses?.contact_email,
+          status: (session as any).businesses?.business_status,
         },
         batch: {
-          id: session.payment_batch_id,
-          week_number: session.payment_batches?.week_number,
-          year: session.payment_batches?.year_number,
-          total_amount: session.payment_batches?.total_amount,
-          status: session.payment_batches?.batch_status,
-          has_csv: !!session.payment_batches?.csv_file_path,
+          id: (session as any).payment_batch_id,
+          week_number: (session as any).payment_batches?.week_number,
+          year: (session as any).payment_batches?.year_number,
+          total_amount: (session as any).payment_batches?.total_amount,
+          status: (session as any).payment_batches?.batch_status,
+          has_csv: !!(session as any).payment_batches?.csv_file_path,
         },
         verification: {
-          status: session.status,
-          total_transactions: session.total_transactions,
-          verified_transactions: session.verified_transactions,
-          approved_count: session.approved_count || 0,
-          rejected_count: session.rejected_count || 0,
+          status: (session as any).status,
+          total_transactions: (session as any).total_transactions,
+          verified_transactions: (session as any).verified_transactions,
+          approved_count: (session as any).approved_count || 0,
+          rejected_count: (session as any).rejected_count || 0,
           completion_rate_percentage: completionRate,
           approval_rate_percentage: approvalRate,
-          current_transaction_index: session.current_transaction_index || 0,
+          current_transaction_index: (session as any).current_transaction_index || 0,
         },
         timeline: {
-          created_at: session.created_at,
-          started_at: session.started_at,
-          completed_at: session.completed_at,
-          deadline: session.deadline,
+          created_at: (session as any).created_at,
+          started_at: (session as any).started_at,
+          completed_at: (session as any).completed_at,
+          deadline: (session as any).deadline,
           is_overdue: isOverdue,
           hours_remaining: Math.floor(hoursRemaining),
           deadline_status: isOverdue ? 'overdue' :
@@ -272,7 +272,7 @@ export async function GET(request: NextRequest) {
             hoursRemaining < 72 ? 'urgent' : 'normal',
         },
         risk_assessment: {
-          average_risk_score: session.average_risk_score || 0,
+          average_risk_score: (session as any).average_risk_score || 0,
           risk_level: riskLevel,
           urgency_score: urgencyScore,
           urgency_level: urgencyLevel,
