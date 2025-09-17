@@ -412,9 +412,9 @@ export async function GET(
           '#',
         ].join('\n') + '\n\n'
 
-        content = metadata + csvService.convertToCSV(exportData.verification_results)
+        content = metadata + csvService.generateVerificationResultCSV(exportData.verification_results)
       } else {
-        content = csvService.convertToCSV(exportData.verification_results)
+        content = csvService.generateVerificationResultCSV(exportData.verification_results)
       }
       contentType = 'text/csv'
     }
