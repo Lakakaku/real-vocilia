@@ -399,7 +399,7 @@ export async function GET(request: NextRequest) {
 
     // Log admin access
     await auditService.logActivity({
-      event_type: 'verification_results_accessed',
+      event_type: 'data_export_requested',
       actor_id: user.id,
       actor_type: 'admin',
       business_id: query.business_id || null,
