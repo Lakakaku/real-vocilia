@@ -1,0 +1,641 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Admin Payment Verification API",
+    "description": "Admin API for managing payment batch creation and verification result processing",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://admin.vocilia.com/api",
+      "description": "Production admin portal API"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "AdminPaymentBatch": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "business_id": { "type": "string", "format": "uuid" },
+          "business_name": { "type": "string" },
+          "week_number": { "type": "integer", "minimum": 1, "maximum": 53 },
+          "year": { "type": "integer", "minimum": 2024 },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "pending", "downloaded", "in_progress", "submitted", "auto_approved", "completed", "cancelled"]
+          },
+          "deadline": { "type": "string", "format": "date-time" },
+          "total_transactions": { "type": "integer", "minimum": 0 },
+          "total_reward_amount": { "type": "number", "minimum": 0 },
+          "created_at": { "type": "string", "format": "date-time" },
+          "created_by": { "type": "string", "format": "uuid" },
+          "file_path": { "type": "string" },
+          "file_size": { "type": "integer" },
+          "notes": { "type": "string" },
+          "verification_summary": {
+            "type": "object",
+            "properties": {
+              "approved_count": { "type": "integer" },
+              "rejected_count": { "type": "integer" },
+              "pending_count": { "type": "integer" },
+              "fraud_flags": { "type": "integer" }
+            }
+          }
+        },
+        "required": ["id", "business_id", "business_name", "week_number", "year", "status", "deadline", "total_transactions", "total_reward_amount"]
+      },
+      "BatchCreationRequest": {
+        "type": "object",
+        "properties": {
+          "business_id": { "type": "string", "format": "uuid" },
+          "week_number": { "type": "integer", "minimum": 1, "maximum": 53 },
+          "year": { "type": "integer", "minimum": 2024 },
+          "transactions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "transaction_id": { "type": "string", "pattern": "^VCL-\\d+$" },
+                "date_time": { "type": "string", "format": "date-time" },
+                "amount_sek": { "type": "number", "minimum": 0 },
+                "phone_last4": { "type": "string", "pattern": "^\\*\\*\\d{2}$" },
+                "store_code": { "type": "string", "pattern": "^[A-Z0-9]{6}$" },
+                "quality_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "reward_percentage": { "type": "integer", "minimum": 3, "maximum": 15 },
+                "reward_amount_sek": { "type": "number", "minimum": 0 },
+                "customer_feedback_id": { "type": "string", "format": "uuid" }
+              },
+              "required": ["transaction_id", "date_time", "amount_sek", "phone_last4", "store_code", "quality_score", "reward_percentage", "reward_amount_sek"]
+            }
+          },
+          "notes": { "type": "string", "maxLength": 1000 }
+        },
+        "required": ["business_id", "week_number", "year", "transactions"]
+      },
+      "VerificationSummary": {
+        "type": "object",
+        "properties": {
+          "session_id": { "type": "string", "format": "uuid" },
+          "batch_id": { "type": "string", "format": "uuid" },
+          "business_id": { "type": "string", "format": "uuid" },
+          "business_name": { "type": "string" },
+          "total_transactions": { "type": "integer" },
+          "verified_transactions": { "type": "integer" },
+          "approved_count": { "type": "integer" },
+          "rejected_count": { "type": "integer" },
+          "fraud_flags_count": { "type": "integer" },
+          "submitted_at": { "type": "string", "format": "date-time" },
+          "verification_details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "transaction_id": { "type": "string" },
+                "verified": { "type": "boolean" },
+                "rejection_reason": { "type": "string" },
+                "business_notes": { "type": "string" },
+                "fraud_risk_score": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "AdminApiError": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" },
+          "code": { "type": "string" },
+          "details": { "type": "object" }
+        },
+        "required": ["error", "message"]
+      }
+    }
+  },
+  "paths": {
+    "/admin/batches": {
+      "get": {
+        "summary": "List all payment batches",
+        "description": "Returns paginated list of payment batches across all businesses with filtering options",
+        "tags": ["Admin Batches"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          },
+          {
+            "name": "business_id",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["draft", "pending", "downloaded", "in_progress", "submitted", "auto_approved", "completed", "cancelled"]
+            }
+          },
+          {
+            "name": "week_number",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 53 }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 2024 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of payment batches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batches": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/AdminPaymentBatch" }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "total": { "type": "integer" },
+                        "total_pages": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new payment batch",
+        "description": "Creates a new payment batch for a business with transaction data",
+        "tags": ["Admin Batches"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BatchCreationRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment batch created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminPaymentBatch" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid batch data or duplicate batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/AdminApiError" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "validation_errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "field": { "type": "string" },
+                              "error": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/batches/{batch_id}": {
+      "get": {
+        "summary": "Get payment batch details",
+        "description": "Returns detailed information about a specific payment batch",
+        "tags": ["Admin Batches"],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment batch details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminPaymentBatch" }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminApiError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update payment batch",
+        "description": "Updates payment batch status, notes, or deadline",
+        "tags": ["Admin Batches"],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "cancelled", "completed"]
+                  },
+                  "deadline": { "type": "string", "format": "date-time" },
+                  "notes": { "type": "string", "maxLength": 1000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminPaymentBatch" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid update data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/batches/{batch_id}/release": {
+      "post": {
+        "summary": "Release batch to business",
+        "description": "Changes batch status from draft to pending, making it available for business download",
+        "tags": ["Admin Batches"],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Batch released successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batch_id": { "type": "string", "format": "uuid" },
+                    "status": { "type": "string" },
+                    "released_at": { "type": "string", "format": "date-time" },
+                    "deadline": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Batch cannot be released (invalid status)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/verification-results": {
+      "get": {
+        "summary": "Get verification results",
+        "description": "Returns verification results across all businesses with filtering and aggregation options",
+        "tags": ["Admin Verification"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          },
+          {
+            "name": "business_id",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "week_number",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 53 }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 2024 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["submitted", "completed", "auto_approved"]
+            }
+          },
+          {
+            "name": "fraud_risk_min",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 0, "maximum": 100 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of verification summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/VerificationSummary" }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "total": { "type": "integer" },
+                        "total_pages": { "type": "integer" }
+                      }
+                    },
+                    "aggregations": {
+                      "type": "object",
+                      "properties": {
+                        "total_verified": { "type": "integer" },
+                        "total_approved": { "type": "integer" },
+                        "total_rejected": { "type": "integer" },
+                        "total_fraud_flags": { "type": "integer" },
+                        "total_reward_amount": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/verification-results/{session_id}/download": {
+      "get": {
+        "summary": "Download verification results CSV",
+        "description": "Generates signed URL for downloading verification results CSV file",
+        "tags": ["Admin Verification"],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Download URL generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "download_url": { "type": "string", "format": "uri" },
+                    "expires_at": { "type": "string", "format": "date-time" },
+                    "filename": { "type": "string" },
+                    "file_size": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Verification session not found or no results available",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/verification-results/{session_id}/process": {
+      "post": {
+        "summary": "Process verification results",
+        "description": "Marks verification results as processed and triggers payment workflow",
+        "tags": ["Admin Verification"],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "admin_notes": { "type": "string", "maxLength": 1000 },
+                  "override_rejections": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "transaction_id": { "type": "string" },
+                        "override_reason": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification results processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": { "type": "string", "format": "uuid" },
+                    "processed_at": { "type": "string", "format": "date-time" },
+                    "final_approved_count": { "type": "integer" },
+                    "final_rejected_count": { "type": "integer" },
+                    "total_payout_amount": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Results already processed or invalid state",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/analytics/verification-stats": {
+      "get": {
+        "summary": "Get verification analytics",
+        "description": "Returns aggregated verification statistics for monitoring and reporting",
+        "tags": ["Admin Analytics"],
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "business_id",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verification analytics data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "type": "object",
+                      "properties": {
+                        "start_date": { "type": "string", "format": "date" },
+                        "end_date": { "type": "string", "format": "date" }
+                      }
+                    },
+                    "totals": {
+                      "type": "object",
+                      "properties": {
+                        "batches_created": { "type": "integer" },
+                        "batches_completed": { "type": "integer" },
+                        "transactions_verified": { "type": "integer" },
+                        "transactions_approved": { "type": "integer" },
+                        "transactions_rejected": { "type": "integer" },
+                        "auto_approvals": { "type": "integer" },
+                        "fraud_flags": { "type": "integer" },
+                        "total_reward_amount": { "type": "number" }
+                      }
+                    },
+                    "by_business": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "business_id": { "type": "string", "format": "uuid" },
+                          "business_name": { "type": "string" },
+                          "completion_rate": { "type": "number" },
+                          "avg_verification_time": { "type": "number" },
+                          "fraud_detection_rate": { "type": "number" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

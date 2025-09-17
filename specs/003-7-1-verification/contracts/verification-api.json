@@ -1,0 +1,499 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Payment Verification API",
+    "description": "API for managing weekly payment verification workflows between admin and businesses",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://business.vocilia.com/api",
+      "description": "Production business portal API"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "PaymentBatch": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "business_id": { "type": "string", "format": "uuid" },
+          "week_number": { "type": "integer", "minimum": 1, "maximum": 53 },
+          "year": { "type": "integer", "minimum": 2024 },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "downloaded", "in_progress", "submitted", "auto_approved", "completed", "cancelled"]
+          },
+          "deadline": { "type": "string", "format": "date-time" },
+          "total_transactions": { "type": "integer", "minimum": 0 },
+          "total_reward_amount": { "type": "number", "minimum": 0 },
+          "created_at": { "type": "string", "format": "date-time" },
+          "file_path": { "type": "string" },
+          "file_size": { "type": "integer" }
+        },
+        "required": ["id", "business_id", "week_number", "year", "status", "deadline", "total_transactions", "total_reward_amount", "created_at"]
+      },
+      "VerificationSession": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "payment_batch_id": { "type": "string", "format": "uuid" },
+          "business_id": { "type": "string", "format": "uuid" },
+          "status": {
+            "type": "string",
+            "enum": ["not_started", "downloaded", "in_progress", "submitted", "auto_approved", "completed"]
+          },
+          "total_transactions": { "type": "integer", "minimum": 0 },
+          "verified_transactions": { "type": "integer", "minimum": 0 },
+          "approved_count": { "type": "integer", "minimum": 0 },
+          "rejected_count": { "type": "integer", "minimum": 0 },
+          "deadline": { "type": "string", "format": "date-time" },
+          "time_remaining": { "type": "integer", "description": "Seconds until deadline" },
+          "started_at": { "type": "string", "format": "date-time" },
+          "downloaded_at": { "type": "string", "format": "date-time" },
+          "submitted_at": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "payment_batch_id", "business_id", "status", "deadline", "time_remaining"]
+      },
+      "VerificationResult": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "transaction_id": { "type": "string", "pattern": "^VCL-\\d+$" },
+          "transaction_date": { "type": "string", "format": "date-time" },
+          "amount_sek": { "type": "number", "minimum": 0 },
+          "phone_last4": { "type": "string", "pattern": "^\\*\\*\\d{2}$" },
+          "store_code": { "type": "string", "pattern": "^[A-Z0-9]{6}$" },
+          "quality_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "reward_percentage": { "type": "integer", "minimum": 3, "maximum": 15 },
+          "reward_amount_sek": { "type": "number", "minimum": 0 },
+          "verified": { "type": "boolean" },
+          "verification_decision": {
+            "type": "string",
+            "enum": ["approved", "rejected", "pending_review"]
+          },
+          "rejection_reason": {
+            "type": "string",
+            "enum": ["not_found", "amount_mismatch", "time_mismatch", "duplicate", "suspicious_pattern", "invalid_customer", "other"]
+          },
+          "business_notes": { "type": "string", "maxLength": 1000 },
+          "fraud_risk_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "ai_recommendation": {
+            "type": "string",
+            "enum": ["approve", "review", "reject"]
+          }
+        },
+        "required": ["id", "transaction_id", "transaction_date", "amount_sek", "phone_last4", "store_code"]
+      },
+      "VerificationUpload": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "CSV file with verification results"
+          }
+        },
+        "required": ["file"]
+      },
+      "VerificationStatus": {
+        "type": "object",
+        "properties": {
+          "session": { "$ref": "#/components/schemas/VerificationSession" },
+          "batch": { "$ref": "#/components/schemas/PaymentBatch" },
+          "progress": {
+            "type": "object",
+            "properties": {
+              "completion_percentage": { "type": "number", "minimum": 0, "maximum": 100 },
+              "transactions_verified": { "type": "integer", "minimum": 0 },
+              "transactions_pending": { "type": "integer", "minimum": 0 },
+              "estimated_time_remaining": { "type": "integer", "description": "Estimated minutes to complete" }
+            }
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" },
+          "code": { "type": "string" },
+          "details": { "type": "object" }
+        },
+        "required": ["error", "message"]
+      }
+    }
+  },
+  "paths": {
+    "/verification/current": {
+      "get": {
+        "summary": "Get current verification batch for authenticated business",
+        "description": "Returns the current payment batch that requires verification, if any exists",
+        "tags": ["Verification"],
+        "responses": {
+          "200": {
+            "description": "Current verification batch and session status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batch": { "$ref": "#/components/schemas/PaymentBatch" },
+                    "session": { "$ref": "#/components/schemas/VerificationSession" }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No current verification batch available"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verification/download": {
+      "post": {
+        "summary": "Download payment batch CSV file",
+        "description": "Generates a signed URL for downloading the payment batch CSV and marks batch as downloaded",
+        "tags": ["Verification"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "batch_id": { "type": "string", "format": "uuid" }
+                },
+                "required": ["batch_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Download URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "download_url": { "type": "string", "format": "uri" },
+                    "expires_at": { "type": "string", "format": "date-time" },
+                    "file_size": { "type": "integer" },
+                    "filename": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid batch ID or batch not available for download",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verification/transactions": {
+      "get": {
+        "summary": "Get transactions for verification",
+        "description": "Returns paginated list of transactions in current verification batch with fraud assessments",
+        "tags": ["Verification"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "pending", "verified", "flagged"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of transactions with verification details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/VerificationResult" }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "total": { "type": "integer" },
+                        "total_pages": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verification/transactions/{transaction_id}": {
+      "put": {
+        "summary": "Update verification decision for transaction",
+        "description": "Approve or reject a specific transaction with business notes",
+        "tags": ["Verification"],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^VCL-\\d+$" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "verified": { "type": "boolean" },
+                  "rejection_reason": {
+                    "type": "string",
+                    "enum": ["not_found", "amount_mismatch", "time_mismatch", "duplicate", "suspicious_pattern", "invalid_customer", "other"]
+                  },
+                  "business_notes": { "type": "string", "maxLength": 1000 }
+                },
+                "required": ["verified"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification decision updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VerificationResult" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid verification data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verification/upload": {
+      "post": {
+        "summary": "Upload verification results CSV",
+        "description": "Upload completed verification results and mark session as submitted",
+        "tags": ["Verification"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "batch_id": { "type": "string", "format": "uuid" },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV file with verification results"
+                  }
+                },
+                "required": ["batch_id", "file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification results uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": { "type": "string", "format": "uuid" },
+                    "status": { "type": "string" },
+                    "verified_transactions": { "type": "integer" },
+                    "approved_count": { "type": "integer" },
+                    "rejected_count": { "type": "integer" },
+                    "upload_timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file format or validation errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/ApiError" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "validation_errors": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "row": { "type": "integer" },
+                              "column": { "type": "string" },
+                              "error": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verification/status": {
+      "get": {
+        "summary": "Get real-time verification status",
+        "description": "Returns current verification session status with progress and countdown information",
+        "tags": ["Verification"],
+        "responses": {
+          "200": {
+            "description": "Current verification status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VerificationStatus" }
+              }
+            }
+          },
+          "204": {
+            "description": "No active verification session"
+          }
+        }
+      }
+    },
+    "/verification/history": {
+      "get": {
+        "summary": "Get verification history",
+        "description": "Returns paginated list of past verification sessions",
+        "tags": ["Verification"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10 }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 2024 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of past verification sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          { "$ref": "#/components/schemas/VerificationSession" },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "batch": { "$ref": "#/components/schemas/PaymentBatch" }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "total": { "type": "integer" },
+                        "total_pages": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -44,27 +44,13 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy built application and all necessary files
-COPY --from=builder /app/.next ./.next
+# Copy the standalone output from the build stage
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/app ./app
-COPY --from=builder /app/pages ./pages
-COPY --from=builder /app/lib ./lib
-COPY --from=builder /app/components ./components
-COPY --from=builder /app/types ./types
-COPY --from=builder /app/middleware.ts ./
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/tsconfig.json ./
-COPY --from=builder /app/server.js ./
-COPY --from=builder /app/sentry.*.config.ts ./
-COPY --from=builder /app/postcss.config.js ./
-COPY --from=builder /app/tailwind.config.ts ./
 
 # Expose port (Railway will override with PORT env var)
 EXPOSE 3000
 
-# Start the Next.js application with custom server
+# Start the Next.js standalone server
 CMD ["node", "server.js"]

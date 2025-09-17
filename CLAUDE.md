@@ -4,7 +4,7 @@
 Building a production-ready business dashboard for Vocilia - an AI-powered customer feedback platform that rewards customers with cashback for quality feedback via voice conversations.
 
 ## Critical: Production-First Development
-  **NO DEMO ENVIRONMENT - EVERYTHING IS REAL FROM DAY ONE**  
+ï¿½ **NO DEMO ENVIRONMENT - EVERYTHING IS REAL FROM DAY ONE** ï¿½
 - All accounts created are REAL production accounts
 - Use actual (small) transactions when testing payments
 - Database is production from the start
@@ -30,37 +30,43 @@ Building a production-ready business dashboard for Vocilia - an AI-powered custo
 
 ## Current Development Context
 
-### Active Feature: Customer Entry Flow (002-6-3-customer)
-**Branch**: `002-6-3-customer`
+### Active Feature: Payment Verification Dashboard System (003-7-1-verification)
+**Branch**: `003-7-1-verification`
 **Status**: Implementation Planning Complete
 
 #### Technology Stack
-- **Language/Version**: TypeScript 5.x / Node.js 20+
-- **Primary Dependencies**: Next.js 14+, Supabase Client SDK, React Hook Form, Tailwind CSS, Shadcn/ui
-- **Storage**: Supabase PostgreSQL (existing project: ervnxnbxsaaeakbvwieh)
-- **Testing**: Vitest, React Testing Library, Playwright (E2E)
-- **Target Platform**: Web (mobile-first responsive), deployed on Vercel
+- **Language/Version**: TypeScript 5.5+ / Node.js 20+
+- **Primary Dependencies**: Next.js 14.2.5, Supabase (@supabase/supabase-js 2.39.3), React Hook Form 7.62.0, Tailwind CSS, Shadcn/ui, Zod 3.23.8, OpenAI API
+- **Storage**: Supabase PostgreSQL with existing business/store schema, new verification tables, Supabase Storage for CSV files
+- **Testing**: Vitest, React Testing Library, contract testing, Playwright (E2E)
+- **Target Platform**: Web application (business.vocilia.com), mobile-responsive
 
 #### Feature Description
-Create a minimal, mobile-optimized landing page at vocilia.com where customers can enter 6-digit store codes after scanning QR codes. The system validates codes against the Supabase database and redirects to the feedback page.
+Create a comprehensive payment verification dashboard system for weekly business-admin data exchange with 7-day deadlines, fraud detection, and automated approval. Admin sends payment batches to businesses who verify transactions against POS records and upload results.
 
 #### Key Requirements
-- Accept exactly 6 numeric digits as valid store code input
-- Validate store codes exist in system database
-- Redirect valid entries to vocilia.com/feedback/{store_code}
-- Mobile-optimized with responsive design
-- Rate limiting: 5 attempts per minute per IP
-- Performance: < 2s load on 3G, < 1s submission on 4G
+- 7-day verification deadline management with countdown timers
+- CSV download/upload for payment batch processing
+- AI-powered fraud detection with risk scoring (0-100)
+- Real-time verification progress tracking
+- Automated approval for missed deadlines
+- Complete audit trail for compliance
+- Mobile-optimized verification interface
 
 #### Implementation Decisions
-- React Hook Form with Zod for form validation
-- Supabase RLS for secure database access
+- Supabase Storage for secure CSV file handling with RLS
+- OpenAI GPT-4o-mini for fraud detection assistance
+- Real-time countdown timers with server-side authority
 - Progressive Web App approach for offline capability
-- IP-based rate limiting via Edge Functions
-- Service Worker for offline functionality
+- IP-based rate limiting and audit logging
+- Multi-factor fraud scoring algorithm
 
 #### New Database Tables
-- `store_code_validations`: Tracks validation attempts for security monitoring
+- `payment_batches`: Weekly transaction collections from admin
+- `verification_sessions`: Business verification workflow management
+- `verification_results`: Individual transaction verification decisions
+- `fraud_assessments`: AI-generated risk analysis
+- `verification_audit_logs`: Complete activity tracking
 
 ## URL Structure
 - **Customer Platform**: vocilia.com
@@ -90,9 +96,10 @@ OPENAI_API_KEY=[your-key]
 - Test with real data but minimal amounts (1-5 SEK)
 
 ## Recent Changes
-1. **Customer Entry Flow** - Implemented mobile-optimized landing page with 6-digit code validation
-2. **Rate Limiting** - Added IP-based rate limiting for security
-3. **Database Schema** - Added store_code_validations table for audit logging
+1. **Payment Verification System** - Comprehensive verification dashboard with AI fraud detection
+2. **CSV File Processing** - Secure upload/download with Supabase Storage integration
+3. **Deadline Management** - Real-time countdown timers with auto-approval fallback
+4. **Audit System** - Complete activity tracking for compliance requirements
 
 ## Commands Reference
 ```bash
@@ -118,4 +125,4 @@ git push origin main  # Auto-deploy to Vercel
 - No placeholder content - everything functional
 
 ---
-*Last updated: 2025-09-16 | Feature: 002-6-3-customer*
+*Last updated: 2025-09-16 | Feature: 003-7-1-verification*

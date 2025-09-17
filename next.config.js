@@ -200,6 +200,7 @@ const nextConfig = {
   // Production optimizations
   reactStrictMode: true,
   swcMinify: true,
+  output: 'standalone',
 
   // Performance optimizations
   poweredByHeader: false,
