@@ -421,7 +421,7 @@ export async function GET(
 
     // Log the download
     await auditService.logActivity({
-      event_type: 'verification_results_downloaded',
+      event_type: 'data_export_requested',
       actor_id: user.id,
       actor_type: 'admin',
       business_id: session.business_id,
