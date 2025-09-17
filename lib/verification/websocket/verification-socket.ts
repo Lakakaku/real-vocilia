@@ -297,7 +297,7 @@ export class VerificationSocket {
       .channel(`business:${businessId}`)
       .on('postgres_changes',
         {
-          event: '*,
+          event: '*',
           schema: 'public',
           table: 'payment_batches',
           filter: `business_id=eq.${businessId}`

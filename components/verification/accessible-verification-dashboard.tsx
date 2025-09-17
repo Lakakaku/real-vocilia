@@ -465,6 +465,8 @@ const TransactionItem = React.forwardRef<HTMLDivElement, {
   )
 })
 
+TransactionItem.displayName = 'TransactionItem'
+
 // Transaction Details Component
 function TransactionDetails({
   transaction,

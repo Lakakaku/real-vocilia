@@ -551,7 +551,7 @@ export function BatchCreationForm({
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   This business has reached their weekly batch limit.
-                  Enable "Force Create" in settings to proceed.
+                  Enable &quot;Force Create&quot; in settings to proceed.
                 </AlertDescription>
               </Alert>
             )}

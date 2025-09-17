@@ -19,7 +19,10 @@ import type {
   FraudPattern,
   VerificationMetrics
 } from '@/types/verification'
+*/
 
+// Temporarily disabled - uncomment when needed
+/*
 export class CachedVerificationService {
   private supabase = createClient()
   private cache = getVerificationCache()
