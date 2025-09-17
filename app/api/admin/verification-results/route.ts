@@ -402,7 +402,7 @@ export async function GET(request: NextRequest) {
       event_type: 'data_export_requested',
       actor_id: user.id,
       actor_type: 'admin',
-      business_id: query.business_id || null,
+      business_id: query.business_id || '',
       category: 'data_access',
       severity: 'info',
       description: 'Admin viewed verification results overview',
