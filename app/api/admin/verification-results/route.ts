@@ -277,12 +277,12 @@ export async function GET(request: NextRequest) {
           urgency_score: urgencyScore,
           urgency_level: urgencyLevel,
           requires_attention: urgencyScore >= 90 || isOverdue,
-          auto_approval_threshold: session.auto_approval_threshold || 30,
+          auto_approval_threshold: (session as any).auto_approval_threshold || 30,
         },
         operational: {
-          pause_count: session.pause_count || 0,
-          notes: session.notes,
-          updated_at: session.updated_at,
+          pause_count: (session as any).pause_count || 0,
+          notes: (session as any).notes,
+          updated_at: (session as any).updated_at,
         },
       }
     })
