@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     const { timeframe, include_cache, include_alerts, include_slow_ops, limit } = validation.data
 
     // Get services
-    const verificationService = getCachedVerificationService()
+    // const verificationService = getCachedVerificationService() // Disabled temporarily
     const performanceMonitor = getPerformanceMonitor()
     const cache = getVerificationCache()
 

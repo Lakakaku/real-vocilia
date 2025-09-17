@@ -12,7 +12,7 @@
  * - Accessibility testing utilities
  */
 
-import { RefObject, useEffect, useRef, useState, useCallback } from 'react'
+import React, { RefObject, useEffect, useRef, useState, useCallback } from 'react'
 
 // WCAG 2.1 AA contrast ratios
 export const CONTRAST_RATIOS = {
