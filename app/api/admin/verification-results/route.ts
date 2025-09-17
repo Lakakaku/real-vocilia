@@ -311,13 +311,13 @@ export async function GET(request: NextRequest) {
     // Calculate summary statistics
     const summary = {
       total_sessions: sessions.length,
-      active_sessions: sessions.filter(s => ['in_progress', 'paused'].includes(s.status)).length,
-      completed_sessions: sessions.filter(s => s.status === 'completed').length,
+      active_sessions: sessions.filter(s => ['in_progress', 'paused'].includes((s as any).status)).length,
+      completed_sessions: sessions.filter(s => (s as any).status === 'completed').length,
       overdue_sessions: enhancedSessions.filter(s => s.timeline.is_overdue).length,
-      expired_sessions: sessions.filter(s => s.status === 'expired').length,
-      cancelled_sessions: sessions.filter(s => s.status === 'cancelled').length,
-      total_transactions_processed: sessions.reduce((sum, s) => sum + (s.verified_transactions || 0), 0),
-      total_amount_processed: sessions.reduce((sum, s) => sum + (s.payment_batches?.total_amount || 0), 0),
+      expired_sessions: sessions.filter(s => (s as any).status === 'expired').length,
+      cancelled_sessions: sessions.filter(s => (s as any).status === 'cancelled').length,
+      total_transactions_processed: sessions.reduce((sum, s) => sum + ((s as any).verified_transactions || 0), 0),
+      total_amount_processed: sessions.reduce((sum, s) => sum + ((s as any).payment_batches?.total_amount || 0), 0),
       average_completion_rate: sessions.length > 0
         ? Math.round(enhancedSessions.reduce((sum, s) => sum + s.verification.completion_rate_percentage, 0) / sessions.length)
         : 0,
@@ -341,7 +341,7 @@ export async function GET(request: NextRequest) {
           risk_score,
           fraud_indicators
         `)
-        .in('verification_session_id', sessions.map(s => s.id))
+        .in('verification_session_id', sessions.map(s => (s as any).id))
 
       if (statsQuery.data) {
         const avgVerificationTime = statsQuery.data.reduce((sum, r) => sum + (r.verification_time_seconds || 0), 0) / Math.max(statsQuery.data.length, 1)
