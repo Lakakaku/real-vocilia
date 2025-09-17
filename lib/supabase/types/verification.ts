@@ -1,3 +1,4 @@
+// RAILWAY DEPLOYMENT TEST - THIS IS THE CORRECT VERSION WITHOUT IMPORT ERRORS
 // Generated TypeScript types for Payment Verification System
 // Based on Supabase schema migrations 007-012
 // Note: These types are for a future verification system that doesn't match current database schema
