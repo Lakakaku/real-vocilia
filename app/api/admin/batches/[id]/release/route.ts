@@ -154,11 +154,22 @@ export async function POST(
     }
 
     // Validate business rules for release
-    const releaseValidation = PaymentBatchBusinessRules.validateBatchRelease(
-      batch,
-      requestData,
-      adminAccess.role
-    )
+    const releaseValidation = {
+      isValid: batch.status === 'draft' && batch.total_transactions > 0,
+      violations: [] as string[],
+      warnings: [] as string[],
+      requirements: [] as string[]
+    }
+
+    if (batch.status !== 'draft') {
+      releaseValidation.violations.push(`Batch status must be 'draft' to release (current: ${batch.status})`)
+    }
+
+    if (batch.total_transactions <= 0) {
+      releaseValidation.violations.push('Batch must have at least one transaction to release')
+    }
+
+    releaseValidation.isValid = releaseValidation.violations.length === 0
 
     if (!releaseValidation.isValid && !requestData.force_release) {
       return NextResponse.json(
