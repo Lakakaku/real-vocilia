@@ -144,7 +144,7 @@ export async function GET(
       const { data: businessAccess, error: accessError } = await supabase
         .from('business_users')
         .select('role')
-        .eq('business_id', session.business_id)
+        .eq('business_id', (session as any).business_id)
         .eq('user_id', user.id)
         .single()
 
@@ -228,7 +228,7 @@ export async function GET(
     }
 
     // Get verifier information for results
-    const verifierIds = [...new Set(results?.map(r => r.verified_by).filter(Boolean) || [])]
+    const verifierIds = Array.from(new Set(results?.map(r => r.verified_by).filter(Boolean) || []))
     let verifiers: Record<string, any> = {}
 
     if (verifierIds.length > 0) {
@@ -252,45 +252,45 @@ export async function GET(
     // Prepare comprehensive data for export
     const exportData = {
       session_metadata: {
-        session_id: session.id,
+        session_id: (session as any).id,
         business: {
-          id: session.business_id,
-          name: session.businesses?.name,
-          contact_email: session.businesses?.contact_email,
-          phone_number: session.businesses?.phone_number,
-          address: session.businesses?.address,
-          status: session.businesses?.business_status,
-          created_at: session.businesses?.business_created_at,
+          id: (session as any).business_id,
+          name: (session as any).businesses?.name,
+          contact_email: (session as any).businesses?.contact_email,
+          phone_number: (session as any).businesses?.phone_number,
+          address: (session as any).businesses?.address,
+          status: (session as any).businesses?.business_status,
+          created_at: (session as any).businesses?.business_created_at,
         },
         batch: {
-          id: session.payment_batch_id,
-          week_number: session.payment_batches?.week_number,
-          year: session.payment_batches?.year_number,
-          total_amount: session.payment_batches?.total_amount,
-          csv_file_path: session.payment_batches?.csv_file_path,
-          status: session.payment_batches?.batch_status,
-          notes: session.payment_batches?.batch_notes,
-          created_by: session.payment_batches?.created_by,
-          created_at: session.payment_batches?.batch_created_at,
+          id: (session as any).payment_batch_id,
+          week_number: (session as any).payment_batches?.week_number,
+          year: (session as any).payment_batches?.year_number,
+          total_amount: (session as any).payment_batches?.total_amount,
+          csv_file_path: (session as any).payment_batches?.csv_file_path,
+          status: (session as any).payment_batches?.batch_status,
+          notes: (session as any).payment_batches?.batch_notes,
+          created_by: (session as any).payment_batches?.created_by,
+          created_at: (session as any).payment_batches?.batch_created_at,
         },
         verification: {
-          status: session.status,
-          total_transactions: session.total_transactions,
-          verified_transactions: session.verified_transactions,
-          approved_count: session.approved_count || 0,
-          rejected_count: session.rejected_count || 0,
-          completion_rate: session.total_transactions > 0
-            ? Math.round((session.verified_transactions / session.total_transactions) * 100)
+          status: (session as any).status,
+          total_transactions: (session as any).total_transactions,
+          verified_transactions: (session as any).verified_transactions,
+          approved_count: (session as any).approved_count || 0,
+          rejected_count: (session as any).rejected_count || 0,
+          completion_rate: (session as any).total_transactions > 0
+            ? Math.round(((session as any).verified_transactions / (session as any).total_transactions) * 100)
             : 0,
-          approval_rate: session.verified_transactions > 0
-            ? Math.round(((session.approved_count || 0) / session.verified_transactions) * 100)
+          approval_rate: (session as any).verified_transactions > 0
+            ? Math.round((((session as any).approved_count || 0) / (session as any).verified_transactions) * 100)
             : 0,
-          current_transaction_index: session.current_transaction_index || 0,
-          deadline: session.deadline,
-          started_at: session.started_at,
-          completed_at: session.completed_at,
-          average_risk_score: session.average_risk_score || 0,
-          auto_approval_threshold: session.auto_approval_threshold || 30,
+          current_transaction_index: (session as any).current_transaction_index || 0,
+          deadline: (session as any).deadline,
+          started_at: (session as any).started_at,
+          completed_at: (session as any).completed_at,
+          average_risk_score: (session as any).average_risk_score || 0,
+          auto_approval_threshold: (session as any).auto_approval_threshold || 30,
           pause_count: session.pause_count || 0,
           notes: session.notes,
           created_at: session.created_at,

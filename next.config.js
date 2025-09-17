@@ -191,6 +191,8 @@ const nextConfig = {
 
   // Configure domains for multi-domain support
   experimental: {
+    // Enable instrumentation hook for proper initialization order
+    instrumentationHook: true,
     // Enable server actions
     serverActions: {
       bodySizeLimit: '2mb',

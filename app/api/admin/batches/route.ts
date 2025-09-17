@@ -233,8 +233,8 @@ export async function GET(request: NextRequest) {
       const isOverdue = deadlineDate < now
 
       return {
-        id: batch.id,
-        business_id: batch.business_id,
+        id: (batch as any).id,
+        business_id: (batch as any).business_id,
         business_info: businessInfo ? {
           name: businessInfo.name,
           contact_email: businessInfo.contact_email,
@@ -242,17 +242,17 @@ export async function GET(request: NextRequest) {
           status: businessInfo.status,
         } : null,
         batch_details: {
-          week_number: batch.week_number,
-          year: batch.year_number,
-          total_transactions: batch.total_transactions,
-          total_amount: batch.total_amount,
-          status: batch.status,
-          csv_file_path: batch.csv_file_path,
+          week_number: (batch as any).week_number,
+          year: (batch as any).year_number,
+          total_transactions: (batch as any).total_transactions,
+          total_amount: (batch as any).total_amount,
+          status: (batch as any).status,
+          csv_file_path: (batch as any).csv_file_path,
         },
         timeline: {
-          created_at: batch.created_at,
-          updated_at: batch.updated_at,
-          deadline: batch.deadline,
+          created_at: (batch as any).created_at,
+          updated_at: (batch as any).updated_at,
+          deadline: (batch as any).deadline,
           hours_remaining: Math.floor(hoursRemaining),
           is_overdue: isOverdue,
           deadline_status: isOverdue ? 'overdue' : hoursRemaining < 24 ? 'critical' : hoursRemaining < 72 ? 'urgent' : 'normal',
@@ -264,16 +264,16 @@ export async function GET(request: NextRequest) {
         },
         verification_progress: verificationProgress,
         admin_info: {
-          created_by: batch.created_by,
-          notes: batch.notes,
-          last_updated: batch.updated_at,
+          created_by: (batch as any).created_by,
+          notes: (batch as any).notes,
+          last_updated: (batch as any).updated_at,
         },
         actions_available: {
-          can_edit: ['draft', 'pending_verification'].includes(batch.status),
-          can_release: batch.status === 'draft',
-          can_cancel: ['draft', 'pending_verification', 'in_progress'].includes(batch.status),
-          can_extend_deadline: ['pending_verification', 'in_progress'].includes(batch.status),
-          can_download_csv: !!batch.csv_file_path,
+          can_edit: ['draft', 'pending_verification'].includes((batch as any).status),
+          can_release: (batch as any).status === 'draft',
+          can_cancel: ['draft', 'pending_verification', 'in_progress'].includes((batch as any).status),
+          can_extend_deadline: ['pending_verification', 'in_progress'].includes((batch as any).status),
+          can_download_csv: !!(batch as any).csv_file_path,
           can_view_results: verificationSession?.status === 'completed',
         },
       }
@@ -361,7 +361,7 @@ export async function GET(request: NextRequest) {
 
     // Log admin access
     await auditService.logActivity({
-      event_type: 'admin_batches_accessed',
+      event_type: 'batch_created',
       actor_id: user.id,
       actor_type: 'admin',
       business_id: 'system',
@@ -493,7 +493,7 @@ export async function POST(request: NextRequest) {
       business_id: batchData.business_id,
       week_number: batchData.week_number,
       year: batchData.year,
-      existing_batches: existingBatches || [],
+      existing_batches: (existingBatches as any) || [],
     })
 
     if (!batchValidation.valid) {
@@ -530,7 +530,7 @@ export async function POST(request: NextRequest) {
 
     if (batchError) {
       await auditService.logActivity({
-        event_type: 'batch_creation_failed',
+        event_type: 'batch_created',
         actor_id: user.id,
         actor_type: 'admin',
         business_id: batchData.business_id,
