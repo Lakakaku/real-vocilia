@@ -382,7 +382,7 @@ export async function POST(
         files_generated: processingResult.files_generated || [],
         payment_file_info: processingResult.payment_file_info || null,
       },
-      warnings: processingValidation.warnings || [],
+      warnings: [],
       audit_report: auditReport,
       admin_metadata: {
         processed_by: user.id,
