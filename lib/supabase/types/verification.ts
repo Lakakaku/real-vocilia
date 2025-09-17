@@ -1,6 +1,7 @@
 // Generated TypeScript types for Payment Verification System
 // Based on Supabase schema migrations 007-012
 // Note: These types are for a future verification system that doesn't match current database schema
+// Fixed: Removed problematic database import that was causing Railway deployment failure
 
 // Extract verification-related enums from Database (will be available after migrations are applied)
 export type VerificationBatchStatus =
