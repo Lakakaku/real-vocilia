@@ -34,7 +34,7 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const transactionId = params.id
 
     // Get authenticated user
@@ -318,7 +318,7 @@ export async function PUT(
       actor_id: user.id,
       actor_type: 'user',
       business_id: session.business_id,
-      category: 'verification',
+      category: 'business_process',
       severity: requestData.decision === 'rejected' ? 'warning' : 'info',
       description: `Transaction ${requestData.decision} by user`,
       details: {

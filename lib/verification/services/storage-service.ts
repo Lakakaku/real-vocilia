@@ -204,6 +204,36 @@ export class VerificationStorageService {
   }
 
   /**
+   * Downloads batch CSV file content
+   */
+  async downloadBatchCSV(options: {
+    businessId: string
+    batchId: string
+    filePath: string
+  }): Promise<{ content: string; filename: string }> {
+    try {
+      const downloadResult = await this.downloadFile({
+        bucket: STORAGE_BUCKETS.BATCH_UPLOADS,
+        path: options.filePath,
+      })
+
+      if (!downloadResult.success || !downloadResult.blob) {
+        throw new Error(downloadResult.error || 'Failed to download batch CSV')
+      }
+
+      const content = await downloadResult.blob.text()
+      const filename = options.filePath.split('/').pop() || `batch-${options.batchId}.csv`
+
+      return {
+        content,
+        filename,
+      }
+    } catch (error) {
+      throw new Error(`Failed to download batch CSV: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
    * Uploads verification results CSV export
    */
   async uploadVerificationExport(options: {
@@ -914,3 +944,6 @@ export class StorageUtils {
     return true
   }
 }
+
+// Export service instances for API routes
+export const storageService = new VerificationStorageService()

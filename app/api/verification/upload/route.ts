@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         actor_id: user.id,
         actor_type: 'user',
         business_id,
-        category: 'data',
+        category: 'data_access',
         severity: 'error',
         description: 'CSV file validation failed during upload',
         details: {
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         actor_id: user.id,
         actor_type: 'user',
         business_id,
-        category: 'data',
+        category: 'data_access',
         severity: 'error',
         description: 'CSV file contains validation errors',
         details: {
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
         actor_id: user.id,
         actor_type: 'user',
         business_id,
-        category: 'data',
+        category: 'data_access',
         severity: 'error',
         description: 'Failed to upload CSV file to storage',
         details: {
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
         actor_id: user.id,
         actor_type: 'user',
         business_id,
-        category: 'verification',
+        category: 'business_process',
         severity: 'error',
         description: 'Failed to create payment batch after successful CSV upload',
         details: {
@@ -335,7 +335,7 @@ export async function POST(request: NextRequest) {
       actor_id: user.id,
       actor_type: 'user',
       business_id,
-      category: 'verification',
+      category: 'business_process',
       severity: 'info',
       description: 'Payment batch created from CSV upload',
       details: {

@@ -675,3 +675,6 @@ Risk factors: ${Object.entries(baseAnalysis.risk_factors)
     return results
   }
 }
+
+// Export service instance for API routes
+export const aiService = new AIFraudDetectionService()

@@ -29,7 +29,7 @@ type DownloadRequest = z.infer<typeof downloadRequestSchema>
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get authenticated user and business context
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
           actor_id: user.id,
           actor_type: 'user',
           business_id: businessId,
-          category: 'data',
+          category: 'data_access',
           severity: 'info',
           description: 'Batch CSV file downloaded',
           details: {
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
           actor_id: user.id,
           actor_type: 'user',
           business_id: businessId,
-          category: 'data',
+          category: 'data_access',
           severity: 'error',
           description: 'Failed to download batch CSV',
           details: {
@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
           actor_id: user.id,
           actor_type: 'user',
           business_id: businessId,
-          category: 'data',
+          category: 'data_access',
           severity: 'info',
           description: 'Verification results exported to CSV',
           details: {
@@ -307,7 +307,7 @@ export async function POST(request: NextRequest) {
           actor_id: user.id,
           actor_type: 'user',
           business_id: businessId,
-          category: 'data',
+          category: 'data_access',
           severity: 'error',
           description: 'Failed to export verification results',
           details: {

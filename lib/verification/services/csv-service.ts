@@ -830,3 +830,6 @@ export class CSVProcessingService {
     }
   }
 }
+
+// Export service instance for API routes
+export const csvService = new CSVProcessingService()

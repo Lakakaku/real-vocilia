@@ -322,6 +322,70 @@ export class PaymentBatchUtils {
 
     return { valid: errors.length === 0, errors }
   }
+
+  /**
+   * Validates if a batch can be released for verification
+   */
+  static validateBatchRelease(
+    batch: PaymentBatchRow,
+    requestData: any,
+    adminRole: string
+  ): {
+    isValid: boolean
+    violations: string[]
+    warnings: string[]
+    requirements: string[]
+  } {
+    const violations: string[] = []
+    const warnings: string[] = []
+    const requirements: string[] = []
+
+    // Check batch status
+    if (batch.status !== 'draft') {
+      violations.push(`Batch status must be 'draft' to release (current: ${batch.status})`)
+    }
+
+    // Check if batch has transactions
+    if (batch.total_transactions <= 0) {
+      violations.push('Batch must have at least one transaction to release')
+    }
+
+    // Check if CSV file is present
+    if (!batch.csv_file_path) {
+      violations.push('Batch must have a CSV file attached to release')
+    }
+
+    // Check admin permissions
+    if (adminRole !== 'admin' && adminRole !== 'super_admin') {
+      violations.push('Insufficient permissions to release batch')
+    }
+
+    // Warnings for potential issues
+    if (batch.total_amount <= 0) {
+      warnings.push('Batch has zero or negative total amount')
+    }
+
+    const now = new Date()
+    const createdAt = new Date(batch.created_at)
+    const timeSinceCreation = now.getTime() - createdAt.getTime()
+    const hoursOld = timeSinceCreation / (1000 * 60 * 60)
+
+    if (hoursOld < 1) {
+      warnings.push('Batch was created less than 1 hour ago - consider additional review')
+    }
+
+    // Requirements for successful release
+    requirements.push('Business will have 7 days to complete verification')
+    requirements.push('Auto-approval will trigger if deadline is missed')
+    requirements.push('Verification session will be created immediately')
+
+    return {
+      isValid: violations.length === 0,
+      violations,
+      warnings,
+      requirements
+    }
+  }
 }
 
 // Export validation functions for use in API routes

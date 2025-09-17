@@ -111,19 +111,19 @@
 - [x] **T041** POST /api/verification/download endpoint in `app/api/verification/download/route.ts` ✅ COMPLETED
 - [x] **T042** GET /api/verification/transactions endpoint in `app/api/verification/transactions/route.ts` ✅ COMPLETED
 - [x] **T043** PUT /api/verification/transactions/[id] endpoint in `app/api/verification/transactions/[id]/route.ts` ✅ COMPLETED
-- [ ] **T044** POST /api/verification/upload endpoint in `app/api/verification/upload/route.ts`
-- [ ] **T045** GET /api/verification/status endpoint in `app/api/verification/status/route.ts`
-- [ ] **T046** GET /api/verification/history endpoint in `app/api/verification/history/route.ts`
+- [x] **T044** POST /api/verification/upload endpoint in `app/api/verification/upload/route.ts` ✅ COMPLETED
+- [x] **T045** GET /api/verification/status endpoint in `app/api/verification/status/route.ts` ✅ COMPLETED
+- [x] **T046** GET /api/verification/history endpoint in `app/api/verification/history/route.ts` ✅ COMPLETED
 
 ### Admin Management Endpoints
-- [ ] **T047** GET /api/admin/batches endpoint in `app/api/admin/batches/route.ts`
-- [ ] **T048** POST /api/admin/batches endpoint in `app/api/admin/batches/route.ts`
-- [ ] **T049** GET /api/admin/batches/[id] endpoint in `app/api/admin/batches/[id]/route.ts`
-- [ ] **T050** PUT /api/admin/batches/[id] endpoint in `app/api/admin/batches/[id]/route.ts`
-- [ ] **T051** POST /api/admin/batches/[id]/release endpoint in `app/api/admin/batches/[id]/release/route.ts`
-- [ ] **T052** GET /api/admin/verification-results endpoint in `app/api/admin/verification-results/route.ts`
-- [ ] **T053** GET /api/admin/verification-results/[id]/download endpoint in `app/api/admin/verification-results/[id]/download/route.ts`
-- [ ] **T054** POST /api/admin/verification-results/[id]/process endpoint in `app/api/admin/verification-results/[id]/process/route.ts`
+- [x] **T047** GET /api/admin/batches endpoint in `app/api/admin/batches/route.ts`
+- [x] **T048** POST /api/admin/batches endpoint in `app/api/admin/batches/route.ts`
+- [x] **T049** GET /api/admin/batches/[id] endpoint in `app/api/admin/batches/[id]/route.ts`
+- [x] **T050** PUT /api/admin/batches/[id] endpoint in `app/api/admin/batches/[id]/route.ts`
+- [x] **T051** POST /api/admin/batches/[id]/release endpoint in `app/api/admin/batches/[id]/release/route.ts`
+- [x] **T052** GET /api/admin/verification-results endpoint in `app/api/admin/verification-results/route.ts`
+- [x] **T053** GET /api/admin/verification-results/[id]/download endpoint in `app/api/admin/verification-results/[id]/download/route.ts`
+- [x] **T054** POST /api/admin/verification-results/[id]/process endpoint in `app/api/admin/verification-results/[id]/process/route.ts`
 
 ## Phase 3.5: Frontend Components
 

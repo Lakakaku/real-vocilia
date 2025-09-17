@@ -176,7 +176,7 @@ export class DeadlineManagementService {
                 actor_id: 'system',
                 actor_type: 'system',
                 business_id: session.business_id,
-                category: 'verification',
+                category: 'business_process',
                 severity: 'info',
                 description: `Session auto-approved after deadline due to meeting approval criteria`,
                 details: {
@@ -197,7 +197,7 @@ export class DeadlineManagementService {
                 actor_id: 'system',
                 actor_type: 'system',
                 business_id: session.business_id,
-                category: 'verification',
+                category: 'business_process',
                 severity: 'warning',
                 description: `Session expired due to deadline without meeting auto-approval criteria`,
                 details: {
@@ -477,7 +477,7 @@ export class DeadlineManagementService {
       actor_id: actorId,
       actor_type: 'admin',
       business_id: businessId,
-      category: 'verification',
+      category: 'business_process',
       severity: 'info',
       description: `Verification deadline extended by ${additionalHours} hours`,
       details: {

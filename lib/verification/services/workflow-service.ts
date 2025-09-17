@@ -216,7 +216,7 @@ export class VerificationWorkflowService {
         actor_id: request.verifier_id,
         actor_type: 'user',
         business_id: request.business_id,
-        category: 'verification',
+        category: 'business_process',
         severity: 'info',
         description: 'Verification session started',
         details: {
@@ -325,7 +325,7 @@ export class VerificationWorkflowService {
         actor_id: request.verifier_id,
         actor_type: 'user',
         business_id: sessionState.business_id,
-        category: 'verification',
+        category: 'business_process',
         severity: 'info',
         description: `Transaction ${request.decision}`,
         details: {
@@ -434,7 +434,7 @@ export class VerificationWorkflowService {
         actor_id: request.verifier_id,
         actor_type: 'user',
         business_id: request.business_id,
-        category: 'verification',
+        category: 'business_process',
         severity: 'info',
         description: 'Verification session paused',
         details: {
@@ -501,7 +501,7 @@ export class VerificationWorkflowService {
         actor_id: request.verifier_id,
         actor_type: 'user',
         business_id: request.business_id,
-        category: 'verification',
+        category: 'business_process',
         severity: 'info',
         description: 'Verification session resumed',
         details: {
@@ -678,7 +678,7 @@ export class VerificationWorkflowService {
       actor_id: verifierId,
       actor_type: 'user',
       business_id: businessId,
-      category: 'verification',
+      category: 'business_process',
       severity: 'info',
       description: 'Verification session completed',
       details: {

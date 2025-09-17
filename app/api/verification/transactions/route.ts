@@ -29,7 +29,7 @@ type TransactionsQuery = z.infer<typeof transactionsQuerySchema>
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -300,7 +300,7 @@ export async function GET(request: NextRequest) {
       actor_id: user.id,
       actor_type: 'user',
       business_id: session.business_id,
-      category: 'verification',
+      category: 'business_process',
       severity: 'info',
       description: 'Verification transactions list accessed',
       details: {
