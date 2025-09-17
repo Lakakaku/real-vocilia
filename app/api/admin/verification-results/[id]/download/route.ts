@@ -399,11 +399,11 @@ export async function GET(
       if (query.include_metadata) {
         const metadata = [
           '# Verification Results Export',
-          `# Session ID: ${session.id}`,
-          `# Business: ${session.businesses?.name}`,
-          `# Batch: Week ${session.payment_batches?.week_number}, ${session.payment_batches?.year_number}`,
-          `# Total Transactions: ${session.total_transactions}`,
-          `# Verified Transactions: ${session.verified_transactions}`,
+          `# Session ID: ${(session as any).id}`,
+          `# Business: ${(session as any).businesses?.name}`,
+          `# Batch: Week ${(session as any).payment_batches?.week_number}, ${(session as any).payment_batches?.year_number}`,
+          `# Total Transactions: ${(session as any).total_transactions}`,
+          `# Verified Transactions: ${(session as any).verified_transactions}`,
           `# Completion Rate: ${exportData.session_metadata.verification.completion_rate}%`,
           `# Approval Rate: ${exportData.session_metadata.verification.approval_rate}%`,
           `# Export Date: ${new Date().toISOString()}`,
