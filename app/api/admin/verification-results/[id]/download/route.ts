@@ -384,8 +384,8 @@ export async function GET(
 
     // Generate filename
     const timestamp = new Date().toISOString().split('T')[0]
-    const businessName = session.businesses?.name?.replace(/[^a-zA-Z0-9]/g, '-') || 'unknown'
-    const batchId = `W${session.payment_batches?.week_number}-${session.payment_batches?.year_number}`
+    const businessName = (session as any).businesses?.name?.replace(/[^a-zA-Z0-9]/g, '-') || 'unknown'
+    const batchId = `W${(session as any).payment_batches?.week_number}-${(session as any).payment_batches?.year_number}`
     const filename = `verification-results-${businessName}-${batchId}-${timestamp}.${query.format}`
 
     let content: string
