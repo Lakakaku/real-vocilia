@@ -169,11 +169,11 @@ export async function POST(
 
     // Validate session can be processed
     const validProcessingStatuses = ['completed', 'in_progress', 'paused']
-    if (!validProcessingStatuses.includes(session.status)) {
+    if (!validProcessingStatuses.includes((session as any).status)) {
       return NextResponse.json(
         {
           error: 'Session cannot be processed',
-          current_status: session.status,
+          current_status: (session as any).status,
           valid_statuses: validProcessingStatuses,
         },
         { status: 400 }
@@ -331,21 +331,21 @@ export async function POST(
       event_type: 'verification_results_processed',
       actor_id: user.id,
       actor_type: 'admin',
-      business_id: session.business_id,
+      business_id: (session as any).business_id,
       category: 'business_process',
       severity: 'critical', // High-impact business operation
       description: `Admin processed verification results with action: ${requestData.action}`,
       details: {
         session_id: sessionId,
-        business_name: session.businesses?.name,
-        batch_id: session.payment_batch_id,
-        week_number: session.payment_batches?.week_number,
-        year_number: session.payment_batches?.year_number,
+        business_name: (session as any).businesses?.name,
+        batch_id: (session as any).payment_batch_id,
+        week_number: (session as any).payment_batches?.week_number,
+        year_number: (session as any).payment_batches?.year_number,
         action: requestData.action,
         total_results: verificationResults.length,
         approved_count: verificationResults.filter(r => r.decision === 'approved').length,
         rejected_count: verificationResults.filter(r => r.decision === 'rejected').length,
-        total_amount: session.payment_batches?.total_amount,
+        total_amount: (session as any).payment_batches?.total_amount,
         admin_role: adminAccess.role,
         override_applied: requestData.override_warnings,
         processing_options: requestData.processing_options,
@@ -361,9 +361,9 @@ export async function POST(
       message: `Verification results ${requestData.action} completed successfully`,
       session: {
         id: sessionId,
-        business_id: session.business_id,
-        business_name: session.businesses?.name,
-        batch_id: session.payment_batch_id,
+        business_id: (session as any).business_id,
+        business_name: (session as any).businesses?.name,
+        batch_id: (session as any).payment_batch_id,
         status: processingResult.session_status,
         processed_at: new Date().toISOString(),
       },
@@ -428,8 +428,8 @@ async function processVerificationCompletion(
   let paymentFileInfo = null
   try {
     const paymentFileResult = await paymentService.generatePaymentFile({
-      session_id: session.id,
-      business_id: session.business_id,
+      session_id: (session as any).id,
+      business_id: (session as any).business_id,
       approved_transactions: approvedResults,
       format: requestData.payment_file_format,
       include_rejected: requestData.include_rejected,
@@ -453,7 +453,7 @@ async function processVerificationCompletion(
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
-    .eq('id', session.id)
+    .eq('id', (session as any).id)
 
   if (updateError) {
     return {
@@ -470,7 +470,7 @@ async function processVerificationCompletion(
       status: 'completed',
       updated_at: new Date().toISOString(),
     })
-    .eq('id', session.payment_batch_id)
+    .eq('id', (session as any).payment_batch_id)
 
   return {
     success: true,
@@ -503,7 +503,7 @@ async function processBatchRejection(
       notes: requestData.admin_notes || 'Batch rejected by admin',
       updated_at: new Date().toISOString(),
     })
-    .eq('id', session.id)
+    .eq('id', (session as any).id)
 
   if (updateError) {
     return {
@@ -521,7 +521,7 @@ async function processBatchRejection(
       notes: requestData.admin_notes || 'Batch rejected during verification',
       updated_at: new Date().toISOString(),
     })
-    .eq('id', session.payment_batch_id)
+    .eq('id', (session as any).payment_batch_id)
 
   return {
     success: true,
@@ -554,8 +554,8 @@ async function generatePaymentFile(
 
   try {
     const paymentFileResult = await paymentService.generatePaymentFile({
-      session_id: session.id,
-      business_id: session.business_id,
+      session_id: (session as any).id,
+      business_id: (session as any).business_id,
       approved_transactions: approvedResults,
       format: requestData.payment_file_format,
       include_rejected: requestData.include_rejected,
@@ -564,7 +564,7 @@ async function generatePaymentFile(
     return {
       success: true,
       outcome: 'payment_file_generated',
-      session_status: session.status, // Keep current status
+      session_status: (session as any).status, // Keep current status
       files_generated: [paymentFileResult.filename],
       payment_file_info: paymentFileResult,
       processing_time_ms: Date.now() - startTime,
@@ -599,7 +599,7 @@ async function forceCompleteSession(
       notes: `Force completed by admin: ${requestData.admin_notes || 'No notes provided'}`,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', session.id)
+    .eq('id', (session as any).id)
 
   if (updateError) {
     return {
@@ -617,7 +617,7 @@ async function forceCompleteSession(
       notes: `Force completed by admin: ${requestData.admin_notes || 'No notes provided'}`,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', session.payment_batch_id)
+    .eq('id', (session as any).payment_batch_id)
 
   return {
     success: true,
@@ -636,8 +636,8 @@ async function generateAuditReport(
 ): Promise<any> {
   // Generate comprehensive audit report
   const report = {
-    session_id: session.id,
-    business_id: session.business_id,
+    session_id: (session as any).id,
+    business_id: (session as any).business_id,
     generated_by: adminId,
     generated_at: new Date().toISOString(),
     summary: {
