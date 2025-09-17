@@ -11,7 +11,8 @@
       "description": "Playwright MCP for browser automation and web testing"
     },
     "vercel": {
-      "url": "https://mcp.vercel.com",
+      "command": "npx",
+      "args": ["-y", "@vercel/mcp"],
       "description": "Vercel MCP for deployment and hosting operations"
     },
     "supabase": {
@@ -46,7 +47,11 @@
       "description": "Serena MCP for semantic code analysis and editing"
     },
     "firecrawl": {
-      "url": "https://mcp.firecrawl.dev/your_firecrawl_api_key/v2/sse",
+      "command": "npx",
+      "args": ["-y", "@firecrawl/mcp-server"],
+      "env": {
+        "FIRECRAWL_API_KEY": "your_firecrawl_api_key_here"
+      },
       "description": "Firecrawl MCP for web scraping and content extraction"
     },
     "resend": {

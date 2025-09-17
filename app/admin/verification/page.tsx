@@ -714,6 +714,10 @@ export default function AdminVerificationDashboard() {
                       <TableCell>
                         <CountdownTimer
                           deadline={batch.deadline}
+                          status={batch.status === 'draft' ? 'pending' :
+                                 batch.status === 'pending_verification' ? 'pending' :
+                                 batch.status === 'failed' ? 'expired' :
+                                 batch.status as any}
                           className="text-sm"
                           showIcon={false}
                           compact

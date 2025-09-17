@@ -363,7 +363,7 @@ export default function VerificationDashboard() {
 
                   <CardContent className="space-y-4">
                     {/* Progress Tracker */}
-                    <ProgressTracker session={session} />
+                    <ProgressTracker sessionId={session.id} />
 
                     {/* Countdown Timer (for active sessions) */}
                     {['in_progress', 'paused', 'pending'].includes(session.status) && (

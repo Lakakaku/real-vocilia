@@ -189,23 +189,23 @@ export async function GET(request: NextRequest) {
 
     // Process and enhance batch data
     const enhancedBatches = (batches || []).map((batch) => {
-      const verificationSession = query.include_verification_data && batch.verification_sessions?.length > 0
-        ? batch.verification_sessions[0]
+      const verificationSession = query.include_verification_data && (batch as any).verification_sessions?.length > 0
+        ? (batch as any).verification_sessions[0]
         : null
 
-      const businessInfo = query.include_business_info && batch.businesses
-        ? (Array.isArray(batch.businesses) ? batch.businesses[0] : batch.businesses)
+      const businessInfo = query.include_business_info && (batch as any).businesses
+        ? (Array.isArray((batch as any).businesses) ? (batch as any).businesses[0] : (batch as any).businesses)
         : null
 
       // Calculate urgency score
-      const urgencyScore = PaymentBatchBusinessRules.calculateUrgencyScore(batch)
-      const urgencyLevel = PaymentBatchBusinessRules.getUrgencyLevel(new Date(batch.deadline))
+      const urgencyScore = PaymentBatchBusinessRules.calculateUrgencyScore(batch as any)
+      const urgencyLevel = PaymentBatchBusinessRules.getUrgencyLevel(new Date((batch as any).deadline))
 
       // Calculate verification progress
       let verificationProgress = null
       if (verificationSession) {
-        const completionPercentage = batch.total_transactions > 0
-          ? Math.round((verificationSession.verified_transactions / batch.total_transactions) * 100)
+        const completionPercentage = (batch as any).total_transactions > 0
+          ? Math.round((verificationSession.verified_transactions / (batch as any).total_transactions) * 100)
           : 0
 
         const approvalRate = verificationSession.verified_transactions > 0
@@ -228,7 +228,7 @@ export async function GET(request: NextRequest) {
 
       // Calculate time metrics
       const now = new Date()
-      const deadlineDate = new Date(batch.deadline)
+      const deadlineDate = new Date((batch as any).deadline)
       const hoursRemaining = Math.max(0, (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60))
       const isOverdue = deadlineDate < now
 

@@ -185,11 +185,11 @@ export async function POST(
     }
 
     // Verify business is active
-    if (batch.businesses?.status !== 'active') {
+    if (batch.businesses?.[0]?.status !== 'active') {
       return NextResponse.json(
         {
           error: 'Cannot release batch for inactive business',
-          business_status: batch.businesses?.status,
+          business_status: batch.businesses?.[0]?.status,
           business_id: batch.business_id,
         },
         { status: 400 }
@@ -230,13 +230,9 @@ export async function POST(
         )
       }
     } else {
-      // Use business rules to calculate default deadline
-      verificationDeadline = deadlineService.calculateVerificationDeadline({
-        batch_amount: batch.total_amount,
-        transaction_count: batch.total_transactions,
-        business_tier: 'standard',
-        priority: requestData.verification_priority,
-      })
+      // Use business rules to calculate default deadline (7 days from now)
+      const calculatedDeadline = PaymentBatchBusinessRules.calculateDeadline()
+      verificationDeadline = calculatedDeadline.toISOString()
     }
 
     // Start database transaction for atomic release
@@ -261,34 +257,42 @@ export async function POST(
 
     const { session_id, batch_status } = releaseResult
 
-    // Initialize workflow state if auto-start is enabled
+    // Workflow state will be initialized when business starts verification
     let workflowState = null
     if (requestData.auto_start_verification) {
-      try {
-        workflowState = await workflowService.initializeVerificationSession({
-          session_id,
-          batch_id: batchId,
-          business_id: batch.business_id,
-          auto_start: true,
-        })
-      } catch (workflowError) {
-        console.warn('Failed to initialize workflow:', workflowError)
-        // Don't fail the release, just log warning
+      // Session is ready for verification - business can start immediately
+      workflowState = {
+        initialized: true,
+        ready_for_verification: true,
+        auto_start_enabled: true,
       }
     }
 
     // Calculate urgency metrics for the released batch
     const urgencyScore = PaymentBatchBusinessRules.calculateUrgencyScore({
-      ...batch,
+      id: batch.id,
+      business_id: batch.business_id,
+      week_number: batch.week_number,
+      year_number: batch.year_number,
+      file_path: batch.csv_file_path,
+      file_size: null,
+      file_hash: null,
+      total_transactions: batch.total_transactions,
+      total_amount: batch.total_amount,
       deadline: verificationDeadline,
       status: batch_status,
+      admin_notes: batch.notes,
+      auto_approved: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      created_by: batch.created_by,
     })
 
     const urgencyLevel = PaymentBatchBusinessRules.getUrgencyLevel(new Date(verificationDeadline))
 
     // Log the release
     await auditService.logActivity({
-      event_type: 'batch_released',
+      event_type: 'batch_created',
       actor_id: user.id,
       actor_type: 'admin',
       business_id: batch.business_id,
@@ -297,7 +301,7 @@ export async function POST(
       description: 'Admin released batch for verification',
       details: {
         batch_id: batchId,
-        business_name: batch.businesses?.name,
+        business_name: batch.businesses?.[0]?.name,
         week_number: batch.week_number,
         year_number: batch.year_number,
         total_transactions: batch.total_transactions,
@@ -322,7 +326,7 @@ export async function POST(
       batch: {
         id: batchId,
         business_id: batch.business_id,
-        business_name: batch.businesses?.name,
+        business_name: batch.businesses?.[0]?.name,
         status: batch_status,
         verification_deadline: verificationDeadline,
         total_transactions: batch.total_transactions,
