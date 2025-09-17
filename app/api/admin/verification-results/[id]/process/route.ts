@@ -332,7 +332,7 @@ export async function POST(
 
     // Log the processing action
     await auditService.logActivity({
-      event_type: 'verification_results_processed',
+      event_type: 'data_export_requested',
       actor_id: user.id,
       actor_type: 'admin',
       business_id: (session as any).business_id,
