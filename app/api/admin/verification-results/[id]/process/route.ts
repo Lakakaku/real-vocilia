@@ -481,7 +481,7 @@ async function processVerificationCompletion(
     outcome: 'verification_completed',
     session_status: 'completed',
     total_amount_approved: totalAmountApproved,
-    files_generated: paymentFileInfo ? [paymentFileInfo.filename] : [],
+    files_generated: paymentFileInfo ? [paymentFileInfo.file_name] : [],
     payment_file_info: paymentFileInfo,
     processing_time_ms: Date.now() - startTime,
   }
@@ -569,7 +569,7 @@ async function generatePaymentFile(
       success: true,
       outcome: 'payment_file_generated',
       session_status: (session as any).status, // Keep current status
-      files_generated: [paymentFileResult.filename],
+      files_generated: [paymentFileResult.file_name],
       payment_file_info: paymentFileResult,
       processing_time_ms: Date.now() - startTime,
     }
